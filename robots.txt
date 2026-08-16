@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /404.html
 
-Sitemap: https://www.noiretor-studio.fr/sitemap.xml
+Sitemap: https://mahmoud-immobilier.netlify.app/sitemap.xml

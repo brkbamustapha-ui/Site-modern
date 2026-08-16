@@ -1,61 +1,96 @@
 /* ==========================================================================
-   NOIR & OR — Script principal
-   Menu mobile, header sticky, animations au scroll, formulaire, témoignages,
-   accordéon FAQ, filtres galerie, bouton retour en haut.
+   MAHMOUD IMMOBILIER — Script principal
+   Intro cinématique, navigation sticky, reveal au scroll, menu mobile,
+   lien actif, parallax léger, respect de prefers-reduced-motion.
    ========================================================================== */
 
 (function () {
   "use strict";
 
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   document.addEventListener("DOMContentLoaded", function () {
-    initLoader();
+    initIntro();
     initHeader();
     initMobileNav();
-    initActiveNavLink();
+    initSmoothAnchors();
     initScrollReveal();
-    initTestimonialSlider();
-    initAccordion();
-    initGalleryFilters();
-    initContactForm();
-    initNewsletterForm();
-    initBackToTop();
+    initActiveSection();
+    initHeroParallax();
     initYear();
   });
 
   /* ------------------------------------------------------------------ */
-  /* Loader d'introduction                                              */
+  /* Intro cinématique                                                  */
   /* ------------------------------------------------------------------ */
-  function initLoader() {
-    var loader = document.querySelector("[data-loader]");
-    if (!loader) return;
-    window.addEventListener("load", function () {
-      setTimeout(function () {
-        loader.classList.add("is-hidden");
-      }, 250);
+  function initIntro() {
+    var intro = document.querySelector("[data-intro]");
+    if (!intro) return;
+
+    if (reduceMotion) {
+      intro.classList.add("is-hidden");
+      return;
+    }
+
+    document.body.classList.add("intro-active");
+
+    var hidden = false;
+    function hide() {
+      if (hidden) return;
+      hidden = true;
+      intro.classList.add("is-hidden");
+      document.body.classList.remove("intro-active");
+      intro.setAttribute("aria-hidden", "true");
+    }
+
+    // Séquence d'apparition
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        intro.classList.add("is-ready");
+      });
     });
-    // Filet de sécurité si l'évènement load est déjà passé
-    setTimeout(function () {
-      loader.classList.add("is-hidden");
-    }, 1800);
+
+    var autoTimer = setTimeout(hide, 2400);
+
+    var skipBtn = intro.querySelector("[data-intro-skip]");
+    if (skipBtn) {
+      skipBtn.addEventListener("click", function () {
+        clearTimeout(autoTimer);
+        hide();
+      });
+    }
+
+    intro.addEventListener("click", function (event) {
+      if (event.target === intro) {
+        clearTimeout(autoTimer);
+        hide();
+      }
+    });
   }
 
   /* ------------------------------------------------------------------ */
-  /* Header : effet au scroll                                           */
+  /* Header : sticky + masquage au scroll vers le bas                   */
   /* ------------------------------------------------------------------ */
   function initHeader() {
     var header = document.querySelector("[data-header]");
     if (!header) return;
 
-    function toggleHeader() {
-      if (window.scrollY > 24) {
-        header.classList.add("is-scrolled");
+    var lastY = window.scrollY;
+
+    function onScroll() {
+      var y = window.scrollY;
+      header.classList.toggle("is-scrolled", y > 24);
+
+      if (y > lastY && y > 200) {
+        header.classList.add("is-hidden");
       } else {
-        header.classList.remove("is-scrolled");
+        header.classList.remove("is-hidden");
       }
+      lastY = y;
     }
 
-    toggleHeader();
-    window.addEventListener("scroll", toggleHeader, { passive: true });
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
   }
 
   /* ------------------------------------------------------------------ */
@@ -82,11 +117,7 @@
 
     toggle.addEventListener("click", function () {
       var isOpen = toggle.getAttribute("aria-expanded") === "true";
-      if (isOpen) {
-        closeNav();
-      } else {
-        openNav();
-      }
+      isOpen ? closeNav() : openNav();
     });
 
     links.forEach(function (link) {
@@ -99,29 +130,32 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Lien de navigation actif selon la page courante                    */
+  /* Défilement doux vers les ancres (fermeture menu incluse)           */
   /* ------------------------------------------------------------------ */
-  function initActiveNavLink() {
-    var current = window.location.pathname.split("/").pop() || "index.html";
-    document.querySelectorAll("[data-nav-link]").forEach(function (link) {
-      var href = link.getAttribute("href");
-      if (href === current || (current === "" && href === "index.html")) {
-        link.classList.add("is-active");
-      }
+  function initSmoothAnchors() {
+    var links = document.querySelectorAll('a[href^="#"]');
+    links.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        var id = link.getAttribute("href");
+        if (!id || id === "#") return;
+        var target = document.querySelector(id);
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        history.pushState(null, "", id);
+      });
     });
   }
 
   /* ------------------------------------------------------------------ */
-  /* Animations d'apparition au scroll (IntersectionObserver)           */
+  /* Animations d'apparition au scroll                                  */
   /* ------------------------------------------------------------------ */
   function initScrollReveal() {
     var items = document.querySelectorAll(".reveal");
     if (!items.length) return;
 
-    if (!("IntersectionObserver" in window)) {
-      items.forEach(function (item) {
-        item.classList.add("is-visible");
-      });
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      items.forEach(function (item) { item.classList.add("is-visible"); });
       return;
     }
 
@@ -137,262 +171,71 @@
       { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
     );
 
-    items.forEach(function (item) {
-      observer.observe(item);
-    });
+    items.forEach(function (item) { observer.observe(item); });
   }
 
   /* ------------------------------------------------------------------ */
-  /* Carrousel de témoignages                                           */
+  /* Lien de navigation actif selon la section visible                  */
   /* ------------------------------------------------------------------ */
-  function initTestimonialSlider() {
-    var track = document.querySelector("[data-testimonial-track]");
-    if (!track) return;
+  function initActiveSection() {
+    var sections = document.querySelectorAll("main section[id]");
+    var navLinks = document.querySelectorAll("[data-nav-link]");
+    if (!sections.length || !navLinks.length || !("IntersectionObserver" in window)) return;
 
-    var slides = Array.prototype.slice.call(track.querySelectorAll(".testimonial-slide"));
-    var dotsWrap = document.querySelector("[data-testimonial-dots]");
-    if (!slides.length) return;
-
-    var current = 0;
-    var timer = null;
-
-    var dots = slides.map(function (_, index) {
-      var dot = document.createElement("button");
-      dot.type = "button";
-      dot.setAttribute("aria-label", "Voir le témoignage " + (index + 1));
-      dot.addEventListener("click", function () {
-        goTo(index);
-        restart();
-      });
-      if (dotsWrap) dotsWrap.appendChild(dot);
-      return dot;
+    var map = {};
+    navLinks.forEach(function (link) {
+      map[link.getAttribute("href")] = link;
     });
 
-    function render() {
-      slides.forEach(function (slide, index) {
-        slide.classList.toggle("is-active", index === current);
-      });
-      dots.forEach(function (dot, index) {
-        dot.classList.toggle("is-active", index === current);
-      });
-    }
-
-    function goTo(index) {
-      current = (index + slides.length) % slides.length;
-      render();
-    }
-
-    function next() {
-      goTo(current + 1);
-    }
-
-    function restart() {
-      if (timer) clearInterval(timer);
-      timer = setInterval(next, 6000);
-    }
-
-    render();
-    restart();
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Accordéon FAQ                                                      */
-  /* ------------------------------------------------------------------ */
-  function initAccordion() {
-    var items = document.querySelectorAll("[data-accordion-item]");
-    if (!items.length) return;
-
-    items.forEach(function (item) {
-      var trigger = item.querySelector("[data-accordion-trigger]");
-      var panel = item.querySelector("[data-accordion-panel]");
-      if (!trigger || !panel) return;
-
-      trigger.addEventListener("click", function () {
-        var isOpen = item.classList.contains("is-open");
-
-        items.forEach(function (other) {
-          other.classList.remove("is-open");
-          var otherPanel = other.querySelector("[data-accordion-panel]");
-          if (otherPanel) otherPanel.style.maxHeight = null;
-          var otherTrigger = other.querySelector("[data-accordion-trigger]");
-          if (otherTrigger) otherTrigger.setAttribute("aria-expanded", "false");
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          var id = "#" + entry.target.id;
+          var link = map[id];
+          if (!link) return;
+          if (entry.isIntersecting) {
+            navLinks.forEach(function (l) { l.classList.remove("is-active"); });
+            link.classList.add("is-active");
+          }
         });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
 
-        if (!isOpen) {
-          item.classList.add("is-open");
-          panel.style.maxHeight = panel.scrollHeight + "px";
-          trigger.setAttribute("aria-expanded", "true");
-        }
-      });
-    });
+    sections.forEach(function (section) { observer.observe(section); });
   }
 
   /* ------------------------------------------------------------------ */
-  /* Filtres de la galerie / portfolio                                  */
+  /* Parallax léger sur le halo du hero (desktop, souris uniquement)    */
   /* ------------------------------------------------------------------ */
-  function initGalleryFilters() {
-    var filterButtons = document.querySelectorAll("[data-filter]");
-    var items = document.querySelectorAll("[data-category]");
-    if (!filterButtons.length || !items.length) return;
+  function initHeroParallax() {
+    if (reduceMotion) return;
+    var glow = document.querySelector("[data-hero-glow]");
+    if (!glow || window.matchMedia("(pointer: coarse)").matches) return;
 
-    filterButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
-        var value = button.getAttribute("data-filter");
+    var ticking = false;
+    var targetX = 0;
+    var targetY = 0;
 
-        filterButtons.forEach(function (btn) {
-          btn.classList.remove("is-active");
+    document.addEventListener("mousemove", function (event) {
+      targetX = (event.clientX / window.innerWidth - 0.5) * 40;
+      targetY = (event.clientY / window.innerHeight - 0.5) * 40;
+
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(function () {
+          glow.style.transform = "translate(calc(-50% + " + targetX + "px), calc(-50% + " + targetY + "px))";
+          ticking = false;
         });
-        button.classList.add("is-active");
-
-        items.forEach(function (item) {
-          var category = item.getAttribute("data-category");
-          var show = value === "all" || value === category;
-          item.classList.toggle("is-hidden", !show);
-        });
-      });
-    });
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Validation du formulaire de contact                                */
-  /* ------------------------------------------------------------------ */
-  function initContactForm() {
-    var form = document.querySelector("[data-contact-form]");
-    if (!form) return;
-
-    var successPanel = document.querySelector("[data-form-success]");
-
-    var validators = {
-      name: function (value) {
-        return value.trim().length >= 2 ? "" : "Veuillez indiquer votre nom complet.";
-      },
-      email: function (value) {
-        var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return pattern.test(value.trim()) ? "" : "Veuillez indiquer une adresse e-mail valide.";
-      },
-      phone: function (value) {
-        if (!value.trim()) return "";
-        var pattern = /^[0-9+()\s.-]{6,}$/;
-        return pattern.test(value.trim()) ? "" : "Numéro de téléphone invalide.";
-      },
-      subject: function (value) {
-        return value ? "" : "Veuillez sélectionner un sujet.";
-      },
-      message: function (value) {
-        return value.trim().length >= 10 ? "" : "Votre message doit contenir au moins 10 caractères.";
       }
-    };
-
-    function showError(field, message) {
-      var wrapper = field.closest(".field");
-      if (!wrapper) return;
-      var errorEl = wrapper.querySelector(".error-msg");
-      wrapper.classList.toggle("has-error", Boolean(message));
-      if (errorEl) errorEl.textContent = message;
-    }
-
-    function validateField(field) {
-      var validator = validators[field.name];
-      if (!validator) return true;
-      var message = validator(field.value);
-      showError(field, message);
-      return !message;
-    }
-
-    Object.keys(validators).forEach(function (name) {
-      var field = form.elements[name];
-      if (!field) return;
-      field.addEventListener("blur", function () {
-        validateField(field);
-      });
-      field.addEventListener("input", function () {
-        if (field.closest(".field").classList.contains("has-error")) {
-          validateField(field);
-        }
-      });
     });
-
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      var isValid = true;
-      Object.keys(validators).forEach(function (name) {
-        var field = form.elements[name];
-        if (!field) return;
-        if (!validateField(field)) isValid = false;
-      });
-
-      if (!isValid) {
-        var firstError = form.querySelector(".has-error input, .has-error select, .has-error textarea");
-        if (firstError) firstError.focus();
-        return;
-      }
-
-      var submitBtn = form.querySelector("[type=submit]");
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Envoi en cours…";
-      }
-
-      // Simulation d'envoi (à remplacer par un appel API / service d'emails)
-      setTimeout(function () {
-        form.reset();
-        form.hidden = true;
-        if (successPanel) successPanel.classList.add("is-visible");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Envoyer le message";
-        }
-      }, 900);
-    });
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Formulaire newsletter (footer)                                     */
-  /* ------------------------------------------------------------------ */
-  function initNewsletterForm() {
-    var form = document.querySelector("[data-newsletter-form]");
-    if (!form) return;
-
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      var input = form.querySelector("input[type=email]");
-      var note = form.parentElement.querySelector(".note");
-      if (!input || !input.value.trim()) return;
-
-      if (note) {
-        note.textContent = "Merci ! Vous êtes bien inscrit(e) à notre newsletter.";
-        note.style.color = "var(--color-gold)";
-      }
-      form.reset();
-    });
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Bouton retour en haut de page                                      */
-  /* ------------------------------------------------------------------ */
-  function initBackToTop() {
-    var button = document.querySelector("[data-back-to-top]");
-    if (!button) return;
-
-    function toggle() {
-      button.classList.toggle("is-visible", window.scrollY > 480);
-    }
-
-    button.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    toggle();
-    window.addEventListener("scroll", toggle, { passive: true });
   }
 
   /* ------------------------------------------------------------------ */
   /* Année courante dans le footer                                      */
   /* ------------------------------------------------------------------ */
   function initYear() {
-    var els = document.querySelectorAll("[data-year]");
-    els.forEach(function (el) {
+    document.querySelectorAll("[data-year]").forEach(function (el) {
       el.textContent = new Date().getFullYear();
     });
   }
