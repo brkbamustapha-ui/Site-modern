@@ -161,7 +161,19 @@ npm run start
 | `npm run db:seed` | Seed the database |
 | `npm run db:studio` | Open Prisma Studio |
 
+## Security model
+
+- `/admin` pages are gated by the `(protected)` layout, and **every mutating Server Action independently re-checks the session** (`requireAdmin()` in `app/admin/actions.ts`). This matters because Server Actions are publicly reachable POST endpoints once their ID is known — a layout guard alone protects rendering, not invocation.
+- The session cookie is `httpOnly`, `sameSite=lax`, `secure` in production, and holds an HMAC of a server-side secret rather than the passcode itself. Passcode comparison uses `timingSafeEqual`.
+- No secrets are hardcoded: `ADMIN_PASSCODE` and `ADMIN_SESSION_SECRET` come from the environment. **Set both to strong values before deploying** — the defaults in `.env.example` are placeholders.
+- `GET /api/reservations` requires an admin session; the public `POST` endpoints validate every field with Zod before touching the database.
+
+### Known advisory
+
+`npm audit` reports a high-severity advisory in `deepmerge-ts`, pulled in transitively by `@prisma/config` — which is only used by the **Prisma CLI** (`migrate`, `generate`, `studio`), not by `@prisma/client` at runtime. It is not reachable from the running web app, and npm's only offered remedy is a downgrade to `prisma@6.12.0`. Left as-is deliberately; it will clear on the next Prisma release.
+
 ## Notes
 
 - The previous static single-page site for a different business (a real-estate agency) has been preserved under `_legacy-static-site/` for reference and is excluded from linting/builds.
+- If WebGL is unavailable (blocklisted GPU, hardware acceleration disabled, exhausted context pool) or a scene throws, `SceneCanvas` degrades to a static gradient backdrop instead of breaking the page — see `components/3d/SceneBoundary.tsx`.
 - Prisma is pinned to the 6.x line, which uses the classic `datasource { url = env("DATABASE_URL") }` schema format — Prisma 7 moved connection configuration into a separate `prisma.config.ts` + driver-adapter model, which is a bigger migration than this project needs today.

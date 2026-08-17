@@ -20,7 +20,10 @@ export function Reservation() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    // Capture the form node now: `event.currentTarget` is null once the
+    // handler yields at the first `await`.
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
 
     const parsed = reservationSchema.safeParse(payload);
@@ -50,7 +53,7 @@ export function Reservation() {
       }
 
       setStatus("success");
-      event.currentTarget.reset();
+      form.reset();
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");

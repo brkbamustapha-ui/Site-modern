@@ -5,7 +5,23 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations";
-import { ADMIN_COOKIE_NAME, checkPasscode, createSessionToken } from "@/lib/admin-auth";
+import {
+  ADMIN_COOKIE_NAME,
+  checkPasscode,
+  createSessionToken,
+  isAdminAuthenticated,
+} from "@/lib/admin-auth";
+
+/**
+ * Server Actions are publicly reachable POST endpoints once their ID is known,
+ * so every mutating action must re-check the session itself. The layout guard
+ * only protects page rendering, not action invocation.
+ */
+async function requireAdmin() {
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/login");
+  }
+}
 
 export async function loginAction(formData: FormData) {
   const passcode = String(formData.get("passcode") ?? "");
@@ -47,6 +63,7 @@ function parseProductForm(formData: FormData) {
 }
 
 export async function createProductAction(formData: FormData) {
+  await requireAdmin();
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     redirect("/admin/menu/new?error=1");
@@ -60,6 +77,7 @@ export async function createProductAction(formData: FormData) {
 }
 
 export async function updateProductAction(id: string, formData: FormData) {
+  await requireAdmin();
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     redirect(`/admin/menu/${id}/edit?error=1`);
@@ -73,42 +91,53 @@ export async function updateProductAction(id: string, formData: FormData) {
 }
 
 export async function deleteProductAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
   await prisma.product.delete({ where: { id } });
   revalidatePath("/admin/menu");
   revalidatePath("/");
 }
 
+const RESERVATION_STATUSES = ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"] as const;
+type ReservationStatusValue = (typeof RESERVATION_STATUSES)[number];
+
+function isReservationStatus(value: string): value is ReservationStatusValue {
+  return (RESERVATION_STATUSES as readonly string[]).includes(value);
+}
+
 export async function updateReservationStatusAction(formData: FormData) {
-  const id = String(formData.get("id"));
-  const status = String(formData.get("status")) as
-    | "PENDING"
-    | "CONFIRMED"
-    | "CANCELLED"
-    | "COMPLETED";
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!id || !isReservationStatus(status)) return;
+
   await prisma.reservation.update({ where: { id }, data: { status } });
   revalidatePath("/admin/reservations");
 }
 
 export async function deleteReservationAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
   await prisma.reservation.delete({ where: { id } });
   revalidatePath("/admin/reservations");
 }
 
 export async function markMessageReadAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
   await prisma.contactMessage.update({ where: { id }, data: { isRead: true } });
   revalidatePath("/admin/messages");
 }
 
 export async function deleteMessageAction(formData: FormData) {
+  await requireAdmin();
   const id = String(formData.get("id"));
   await prisma.contactMessage.delete({ where: { id } });
   revalidatePath("/admin/messages");
 }
 
 export async function updateContentAction(formData: FormData) {
+  await requireAdmin();
   const value = String(formData.get("story") ?? "").trim();
   if (!value) return;
 

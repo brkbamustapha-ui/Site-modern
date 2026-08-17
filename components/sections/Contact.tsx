@@ -27,7 +27,10 @@ export function Contact() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    // Capture the form node now: `event.currentTarget` is null once the
+    // handler yields at the first `await`.
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
 
     const parsed = contactSchema.safeParse(payload);
@@ -51,7 +54,7 @@ export function Contact() {
       });
       if (!res.ok) throw new Error("failed");
       setStatus("success");
-      event.currentTarget.reset();
+      form.reset();
     } catch {
       setStatus("error");
     }

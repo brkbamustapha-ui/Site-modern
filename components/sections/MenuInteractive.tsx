@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { Category, Product } from "@prisma/client";
@@ -15,12 +15,42 @@ export function MenuInteractive({ categories }: { categories: CategoryWithProduc
 
   const active = categories.find((c) => c.slug === activeSlug) ?? categories[0];
 
+  // Remembers which card opened the dialog so focus can return there on close.
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      lastTriggerRef.current?.focus();
+    };
+  }, [selected]);
+
   return (
     <div>
-      <div className="scrollbar-none -mx-6 flex gap-3 overflow-x-auto px-6 pb-2 md:mx-0 md:flex-wrap md:px-0">
+      <div
+        role="tablist"
+        aria-label="Menu categories"
+        className="scrollbar-none -mx-6 flex gap-3 overflow-x-auto px-6 pb-2 md:mx-0 md:flex-wrap md:px-0"
+      >
         {categories.map((category) => (
           <button
             key={category.slug}
+            type="button"
+            role="tab"
+            aria-selected={activeSlug === category.slug}
             onClick={() => setActiveSlug(category.slug)}
             data-cursor="View"
             className={cn(
@@ -48,9 +78,15 @@ export function MenuInteractive({ categories }: { categories: CategoryWithProduc
           return (
             <button
               key={product.id}
-              onClick={() => setSelected(product)}
+              type="button"
+              onClick={(event) => {
+                lastTriggerRef.current = event.currentTarget;
+                setSelected(product);
+              }}
+              aria-haspopup="dialog"
+              aria-label={`${product.name} — view details`}
               data-cursor="Open"
-              className="group relative overflow-hidden rounded-2xl border border-cream/10 bg-noir-soft text-left transition-transform duration-500 hover:-translate-y-1.5"
+              className="group relative overflow-hidden rounded-2xl border border-cream/10 bg-noir-soft text-left transition-transform duration-500 hover:-translate-y-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-soft"
             >
               <div
                 className={cn(
@@ -93,17 +129,22 @@ export function MenuInteractive({ categories }: { categories: CategoryWithProduc
             onClick={() => setSelected(null)}
           >
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="dish-dialog-title"
               initial={{ opacity: 0, scale: 0.94, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-cream/10 bg-noir-soft"
+              className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-cream/10 bg-noir-soft"
             >
               <button
+                ref={closeButtonRef}
+                type="button"
                 onClick={() => setSelected(null)}
                 aria-label="Close dish details"
-                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-noir/60 text-cream hover:bg-noir"
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-noir/60 text-cream hover:bg-noir focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold-soft"
               >
                 <X size={18} />
               </button>
@@ -117,7 +158,9 @@ export function MenuInteractive({ categories }: { categories: CategoryWithProduc
                 );
               })()}
               <div className="p-8">
-                <h3 className="font-display text-3xl italic text-cream">{selected.name}</h3>
+                <h3 id="dish-dialog-title" className="font-display text-3xl italic text-cream">
+                  {selected.name}
+                </h3>
                 <p className="mt-3 text-sm leading-relaxed text-cream/65">{selected.description}</p>
                 <div className="mt-6 flex items-center justify-between">
                   <span className="text-xl text-gold-soft">{formatPrice(selected.priceCents)}</span>

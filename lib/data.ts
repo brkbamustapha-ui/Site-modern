@@ -12,15 +12,6 @@ export async function getMenu() {
   });
 }
 
-export async function getSignatureDishes() {
-  return prisma.product.findMany({
-    where: { isAvailable: true, isSignature: true },
-    include: { category: true },
-    orderBy: { order: "asc" },
-    take: 6,
-  });
-}
-
 export async function getStoryContent() {
   const entry = await prisma.restaurantContent.findUnique({ where: { key: "story" } });
   return (

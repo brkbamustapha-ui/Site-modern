@@ -8,12 +8,15 @@ type ExperienceContextValue = {
   prefersReducedMotion: boolean;
   isTouchDevice: boolean;
   performanceTier: PerformanceTier;
+  /** False until client-side capability detection has run. */
+  tierResolved: boolean;
 };
 
 const ExperienceContext = createContext<ExperienceContextValue>({
   prefersReducedMotion: false,
   isTouchDevice: false,
   performanceTier: "high",
+  tierResolved: false,
 });
 
 function detectPerformanceTier(): PerformanceTier {
@@ -32,6 +35,7 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [performanceTier, setPerformanceTier] = useState<PerformanceTier>("high");
+  const [tierResolved, setTierResolved] = useState(false);
 
   useEffect(() => {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -43,13 +47,14 @@ export function ExperienceProvider({ children }: { children: React.ReactNode }) 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsTouchDevice(window.matchMedia("(hover: none), (pointer: coarse)").matches);
     setPerformanceTier(detectPerformanceTier());
+    setTierResolved(true);
 
     return () => motionQuery.removeEventListener("change", updateMotion);
   }, []);
 
   const value = useMemo(
-    () => ({ prefersReducedMotion, isTouchDevice, performanceTier }),
-    [prefersReducedMotion, isTouchDevice, performanceTier]
+    () => ({ prefersReducedMotion, isTouchDevice, performanceTier, tierResolved }),
+    [prefersReducedMotion, isTouchDevice, performanceTier, tierResolved]
   );
 
   return <ExperienceContext.Provider value={value}>{children}</ExperienceContext.Provider>;
