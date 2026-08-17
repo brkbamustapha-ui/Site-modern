@@ -1,108 +1,167 @@
-# Mahmoud Immobilier — Site vitrine cinématique
+# La Dolce Vita — Ristorante Italiano
 
-Landing page premium en une seule page pour l'agence immobilière **Mahmoud Immobilier**. Construite en **HTML5 / CSS3 / JavaScript vanilla**, sans dépendance ni build tool — prête pour un déploiement Netlify immédiat.
+A cinematic, immersive 3D website for a high-end Italian restaurant. Built with Next.js (App Router), TypeScript, Tailwind CSS, React Three Fiber, Framer Motion, Prisma and PostgreSQL.
 
-Aucune section « Biens », aucune photo, aucune carte, aucune adresse ni e-mail : le site mise entièrement sur la typographie, l'espace négatif et les animations pour une impression haut de gamme.
+The hero, the interactive table scene and every floating ingredient on the plate are procedurally generated Three.js geometry — no external 3D models or stock photography are used, so the whole experience runs from source with zero binary assets.
 
-## Structure du projet
+## Stack
+
+| Layer | Tech |
+| --- | --- |
+| Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict) |
+| Styling | Tailwind CSS v4 (CSS-based theme in `app/globals.css`) |
+| 3D | Three.js, `@react-three/fiber`, `@react-three/drei` |
+| Motion | Framer Motion (reveal animations, magnetic buttons, page transitions) |
+| Database | PostgreSQL + Prisma ORM |
+| Validation | Zod (shared client/server schemas) |
+| Auth (admin) | Passcode + signed HTTP-only session cookie (no third-party auth needed) |
+
+## Project structure
 
 ```
-Site-modern/
-├── index.html          Page unique : intro → hero → agence → services → pourquoi nous → réseaux → contact → footer
-├── 404.html             Page d'erreur personnalisée
-├── robots.txt
-├── sitemap.xml
-├── netlify.toml         Configuration de déploiement Netlify (headers de sécurité + cache)
-├── css/
-│   └── style.css        Design system complet (variables, composants, responsive, mobile-first)
-├── js/
-│   └── main.js           Intro cinématique, nav, reveal au scroll, menu mobile, parallax léger
-└── assets/
-    └── images/
-        └── favicon.svg   Monogramme provisoire (voir « Logo » ci-dessous)
+app/
+  (site)/              Public site — layout wires up Navbar/Footer/CustomCursor
+    page.tsx            Home page, assembles all sections
+  admin/
+    login/              Passcode login (public)
+    (protected)/        Auth-gated admin shell (dashboard, menu, reservations, messages, users, settings)
+    actions.ts           Server Actions used by the admin panel (create/update/delete, login/logout)
+  api/
+    products/            GET  — public menu data
+    reservations/         POST — create a reservation · GET (admin) — list reservations
+    contact/              POST — send a contact message
+  icon.tsx, apple-icon.tsx, opengraph-image.tsx   Generated favicons / share image
+  robots.ts, sitemap.ts
+
+components/
+  3d/                  React Three Fiber scenes & primitives (procedural geometry only)
+  ui/                  Cursor, navbar, footer, magnetic buttons, scroll/text reveal
+  sections/            Hero, Menu, Experience (3D table), Story, Chef, Gallery, Reservation, Contact
+  admin/               Admin shell, product form, reservation row actions
+
+lib/
+  prisma.ts             Prisma client singleton
+  data.ts                Query helpers used by Server Components
+  validations.ts          Zod schemas shared by forms + API routes
+  admin-auth.ts            Passcode check + signed session cookie helpers
+  motion-context.tsx        Client context: prefers-reduced-motion, touch detection, device performance tier
+  use-reveal.ts             Scroll-reveal hook (IntersectionObserver + fallback)
+
+prisma/
+  schema.prisma           User, Category, Product, Reservation, ContactMessage, RestaurantContent
+  seed.ts                   Realistic Italian menu + demo content
+  migrations/                Versioned SQL migrations
 ```
 
-## Contenu de la page (ancres)
+## Getting started
 
-| Section | Ancre | Contenu |
-|---|---|---|
-| Intro | — | Overlay cinématique décoratif (logo → nom → slogan), passe automatiquement après ~2,4s ou au clic sur « Passer l'intro » |
-| Hero | `#accueil` | Nom, slogan, texte d'accroche, boutons Nous contacter / WhatsApp |
-| L'agence | `#agence` | Présentation générale + 5 valeurs (Écoute, Accompagnement, Confiance, Professionnalisme, Disponibilité) |
-| Services | `#services` | 6 cartes de services génériques et modifiables |
-| Pourquoi nous | `#pourquoi-nous` | 5 arguments crédibles, sans statistiques inventées |
-| Réseaux sociaux | `#reseaux` | 3 cartes liens vers Instagram / TikTok / Facebook |
-| Contact | `#contact` | Numéro affiché en grand + boutons WhatsApp / Appeler |
-| Footer | — | Marque, slogan, téléphone, réseaux sociaux, copyright |
+### 1. Prerequisites
 
-## Coordonnées utilisées
+- Node.js 20.9+
+- A PostgreSQL database (local or hosted)
 
-- **Téléphone / WhatsApp** : `0699130251` → `tel:+213699130251` et `https://wa.me/213699130251`
-- **Instagram** : https://www.instagram.com/immomahmoud
-- **TikTok** : https://www.tiktok.com/@immomahmoud
-- **Facebook** : https://www.facebook.com/share/19R22vrkJf/
-
-Aucune adresse e-mail, adresse postale ou carte n'a été ajoutée, conformément à la demande.
-
-## Logo
-
-Le vrai logo n'a pas encore été fourni. En attendant, un monogramme typographique provisoire (silhouette géométrique en forme de « M ») sert de repère visuel dans l'intro, la navigation et le footer.
-
-**Pour l'intégrer une fois reçu** :
-1. Placez le fichier dans `assets/images/logo.svg` (ou `.png`).
-2. Remplacez les 4 occurrences du bloc `<svg class="logo-mark">…</svg>` / `<svg class="intro-mark">…</svg>` dans `index.html` (intro, nav desktop, footer) par `<img src="assets/images/logo.svg" alt="Mahmoud Immobilier" class="logo-mark">` (adapter la classe selon l'emplacement).
-3. Ajustez `assets/images/favicon.svg` avec une version simplifiée du logo si besoin.
-
-## Design
-
-- **Palette** : noir cinématique (`#08080a`) + accent bronze/or (`#c9a15a`), typographie d'affiche *Fraunces* + sans-serif *Manrope*.
-- **Mobile-first**, testé sur petits et grands smartphones, tablette et desktop.
-- **Sans photos** : profondeur créée via dégradés radiaux subtils, lignes fines, halo parallax léger au hero (désactivé sur tactile et `prefers-reduced-motion`).
-
-## Animations (`js/main.js`)
-
-- Intro cinématique (apparition logo → nom → slogan, désactivée automatiquement si `prefers-reduced-motion` est actif, bouton « Passer l'intro » toujours disponible)
-- Header sticky qui se masque au scroll vers le bas et réapparaît vers le haut
-- Menu mobile plein écran (fermeture au clic, à la sélection d'un lien, ou avec Échap)
-- Révélation progressive au scroll avec effet « stagger » (`IntersectionObserver`)
-- Lien de navigation actif selon la section visible à l'écran
-- Défilement doux vers les ancres
-- Parallax léger du halo du hero (souris uniquement, désactivé sur tactile)
-- Toutes les animations respectent `prefers-reduced-motion: reduce`
-
-## Utilisation en local
-
-Aucun outil de build n'est requis :
+### 2. Install dependencies
 
 ```bash
-python3 -m http.server 8080
-# puis ouvrir http://localhost:8080
+npm install
 ```
 
-## Déploiement Netlify
+### 3. Configure environment variables
 
-Le fichier `netlify.toml` est prêt : dossier de publication `.` (racine), pas de commande de build, en-têtes de sécurité (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) et cache long sur `css/`, `js/` et `assets/`.
+Copy the example file and fill in real values:
 
-**Étapes** :
-1. Connectez le dépôt à Netlify (ou glissez-déposez le dossier sur app.netlify.com).
-2. Aucune variable d'environnement ni commande de build n'est nécessaire.
-3. Une fois le domaine définitif connu, mettez à jour les URLs placeholder dans `index.html` (balises `canonical` et Open Graph), `robots.txt` et `sitemap.xml` — elles pointent actuellement vers `https://mahmoud-immobilier.netlify.app/` à titre d'exemple.
+```bash
+cp .env.example .env
+```
 
-## Personnalisation
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string used by Prisma |
+| `ADMIN_PASSCODE` | Passcode required to sign in at `/admin/login` |
+| `ADMIN_SESSION_SECRET` | Random secret used to sign the admin session cookie |
+| `NEXT_PUBLIC_SITE_URL` | Public site URL, used for SEO metadata and Open Graph tags |
 
-- **Couleurs / espacements / typographies** : variables CSS en tête de `css/style.css` (bloc `:root`).
-- **Textes des sections** (agence, services, pourquoi nous) : volontairement génériques et neutres, à affiner selon les informations réelles de l'agence quand elles seront disponibles.
-- **Durée de l'intro** : constante `2400` (ms) dans `js/main.js`, fonction `initIntro`.
-- **Photos** : le site est pensé pour fonctionner sans image. Si des photos sont ajoutées plus tard, prévoir leur optimisation (formats WebP/AVIF, `loading="lazy"`) avant intégration.
+#### Local PostgreSQL with Docker
 
-## Vérifications effectuées
+If you don't already have Postgres running locally:
 
-- ✅ Liens WhatsApp (`wa.me/213699130251`) fonctionnels sur les 3 emplacements (nav mobile, hero, contact)
-- ✅ Bouton téléphone (`tel:+213699130251`) fonctionnel sur les 4 emplacements
-- ✅ Liens Instagram / TikTok / Facebook conformes aux URLs fournies, ouverture en nouvel onglet (`target="_blank" rel="noopener noreferrer"`)
-- ✅ Responsive testé sur mobile (390px), tablette (834px) et desktop (1440px)
-- ✅ Animations (intro, reveal, menu mobile) testées et fonctionnelles
-- ✅ Aucune section « Biens », aucune carte, aucune adresse, aucun e-mail
-- ✅ HTML validé (balises bien fermées, aucun ID dupliqué)
-- ✅ Accessibilité : lien d'évitement, focus visible, `aria-label` sur les boutons icônes, respect de `prefers-reduced-motion`
-- ⚠️ Un bug de superposition (`z-index`) empêchant la fermeture du menu mobile a été détecté puis corrigé pendant les tests
+```bash
+docker run --name la-dolce-vita-db \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=la_dolce_vita \
+  -p 5432:5432 -d postgres:16
+```
+
+This matches the default `DATABASE_URL` in `.env.example`.
+
+### 4. Set up the database
+
+```bash
+npm run db:migrate   # applies prisma/migrations, creates the schema
+npm run db:seed      # populates categories, dishes, an admin user record, and the "story" content block
+```
+
+`npm run db:studio` opens Prisma Studio if you want to browse/edit data visually.
+
+### 5. Run the dev server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the public site, and [http://localhost:3000/admin](http://localhost:3000/admin) for the admin panel (passcode = `ADMIN_PASSCODE`).
+
+## Admin panel
+
+`/admin` is gated by a signed, HTTP-only cookie set after the passcode form succeeds (`app/admin/actions.ts`). From the dashboard you can:
+
+- **Menu** — create, edit, delete dishes; toggle availability and "signature dish" status
+- **Reservations** — view bookings, change status (pending/confirmed/cancelled/completed), delete
+- **Messages** — read and manage contact form submissions
+- **Users** — read-only staff directory (`User` model)
+- **Settings** — edit the restaurant's "Our Story" copy shown on the public site
+
+All mutations go through Next.js Server Actions directly against Prisma — no separate REST layer is needed for the admin panel. The public-facing `POST /api/reservations` and `POST /api/contact` routes are the ones consumed by visitors.
+
+## Performance & accessibility
+
+- All Three.js scenes are dynamically imported with `ssr: false` and code-split per section (Hero, Experience) — the 3D bundle is never sent to a page that doesn't render it.
+- `lib/motion-context.tsx` detects device performance (CPU cores, memory, viewport) and exposes a `high | medium | low` tier consumed by every 3D component to scale geometry detail, particle counts, shadow quality and renderer DPR.
+- `prefers-reduced-motion` disables the custom cursor, camera parallax, floating objects and staggered text reveal across the whole site.
+- Touch devices get a self-sustained ambient camera drift instead of pointer-following parallax.
+- Images use `next/image`-compatible formats (AVIF/WebP) where photography is added later (see "Adding real photography" below).
+
+## Adding real photography
+
+The menu, gallery and chef sections currently use art-directed gradient tiles + icons instead of stock photography, so the repository ships with zero binary assets and no licensing concerns. To swap in real photos:
+
+1. Add optimized images to `public/`.
+2. Replace the gradient/icon tile in `components/sections/MenuInteractive.tsx` and `components/sections/Gallery.tsx` with a `next/image`.
+3. Optionally store an image path on `Product.imageQuery` (already part of the schema) and read it from the admin panel.
+
+## Build & deploy
+
+```bash
+npm run build
+npm run start
+```
+
+`next build` type-checks the project and prerenders every static route (icons, sitemap, robots.txt); all data-backed pages are marked `force-dynamic` so they render per-request against your database. Deploy to any Node.js host (Vercel, Fly.io, a container, etc.) with `DATABASE_URL`, `ADMIN_PASSCODE`, `ADMIN_SESSION_SECRET` and `NEXT_PUBLIC_SITE_URL` set in the environment. Run `npm run db:deploy` (`prisma migrate deploy`) against the production database before the first deploy.
+
+## Scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Start the production server |
+| `npm run lint` | ESLint |
+| `npm run db:migrate` | Create/apply a Prisma migration locally |
+| `npm run db:deploy` | Apply migrations in production |
+| `npm run db:seed` | Seed the database |
+| `npm run db:studio` | Open Prisma Studio |
+
+## Notes
+
+- The previous static single-page site for a different business (a real-estate agency) has been preserved under `_legacy-static-site/` for reference and is excluded from linting/builds.
+- Prisma is pinned to the 6.x line, which uses the classic `datasource { url = env("DATABASE_URL") }` schema format — Prisma 7 moved connection configuration into a separate `prisma.config.ts` + driver-adapter model, which is a bigger migration than this project needs today.
