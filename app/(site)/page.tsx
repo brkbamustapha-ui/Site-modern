@@ -1,24 +1,20 @@
 import { Hero } from "@/components/sections/Hero";
-import { Menu } from "@/components/sections/Menu";
-import { ExperienceTable } from "@/components/sections/ExperienceTable";
-import { Story } from "@/components/sections/Story";
-import { Chef } from "@/components/sections/Chef";
-import { Gallery } from "@/components/sections/Gallery";
-import { Reservation } from "@/components/sections/Reservation";
+import { Properties } from "@/components/sections/Properties";
+import { FeaturedProperty } from "@/components/sections/FeaturedProperty";
+import { Services } from "@/components/sections/Services";
+import { About } from "@/components/sections/About";
+import { Process } from "@/components/sections/Process";
 import { Contact } from "@/components/sections/Contact";
 
-export const dynamic = "force-dynamic";
-
-export default function Home() {
+export default function HomePage() {
   return (
     <>
       <Hero />
-      <Menu />
-      <ExperienceTable />
-      <Story />
-      <Chef />
-      <Gallery />
-      <Reservation />
+      <Properties />
+      <FeaturedProperty />
+      <Services />
+      <About />
+      <Process />
       <Contact />
     </>
   );

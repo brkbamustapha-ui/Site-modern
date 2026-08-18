@@ -3,6 +3,7 @@ import { ImageResponse } from "next/og";
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
 
+/** Monogram favicon: gold "B" on deep black, matching the site's palette. */
 export default function Icon() {
   return new ImageResponse(
     (
@@ -13,20 +14,21 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0a0806",
-          borderRadius: 14,
-          border: "2px solid #ad8a4f",
+          background: "#07080b",
+          borderRadius: 13,
+          border: "2px solid #c6a15b",
         }}
       >
         <span
           style={{
-            fontSize: 30,
-            fontStyle: "italic",
-            color: "#f4ecd9",
+            fontSize: 34,
+            fontWeight: 500,
+            color: "#e6cf9a",
             fontFamily: "serif",
+            letterSpacing: -1,
           }}
         >
-          D
+          B
         </span>
       </div>
     ),

@@ -1,72 +1,126 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import { useExperience } from "@/lib/motion-context";
+import { useEffect, useRef } from "react";
+import { useDevice } from "@/lib/device";
 
+/**
+ * Two-part cursor: a crisp dot that tracks the pointer exactly, and a ring
+ * that trails it with inertia. Both are driven by a single rAF loop writing
+ * transforms straight to the DOM — React never re-renders on mouse move.
+ *
+ * Mounted only on fine-pointer devices. Touch screens keep native behaviour.
+ */
 export function CustomCursor() {
-  const { prefersReducedMotion, isTouchDevice } = useExperience();
-  const enabled = !prefersReducedMotion && !isTouchDevice;
-  const [hoverLabel, setHoverLabel] = useState<string | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const { isTouch, prefersReducedMotion, ready } = useDevice();
 
-  const mouseX = useMotionValue(-100);
-  const mouseY = useMotionValue(-100);
-  const ringX = useSpring(mouseX, { stiffness: 260, damping: 26, mass: 0.4 });
-  const ringY = useSpring(mouseY, { stiffness: 260, damping: 26, mass: 0.4 });
+  const enabled = ready && !isTouch;
 
   useEffect(() => {
     if (!enabled) return;
-    document.body.classList.add("has-custom-cursor");
+    // Final guard: matchMedia is the source of truth for "has a real pointer".
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
 
-    const handleMove = (event: PointerEvent) => {
-      mouseX.set(event.clientX);
-      mouseY.set(event.clientY);
-    };
+    const dot = dotRef.current;
+    const ring = ringRef.current;
+    if (!dot || !ring) return;
 
-    const handleOver = (event: PointerEvent) => {
-      const target = (event.target as HTMLElement)?.closest<HTMLElement>("[data-cursor]");
-      if (target) {
-        setIsHovering(true);
-        setHoverLabel(target.dataset.cursor || null);
-      } else {
-        setIsHovering(false);
-        setHoverLabel(null);
+    document.body.dataset.customCursor = "on";
+
+    const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const ringPos = { ...pointer };
+    let ringScale = 1;
+    let targetScale = 1;
+    let visible = false;
+    let frame = 0;
+
+    // Instant follow when the user asked for less motion; inertia otherwise.
+    const ease = prefersReducedMotion ? 1 : 0.16;
+
+    const onMove = (event: PointerEvent) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      if (!visible) {
+        visible = true;
+        // Jump the ring to the pointer on first sight so it doesn't fly in.
+        ringPos.x = pointer.x;
+        ringPos.y = pointer.y;
+        dot.style.opacity = "1";
+        ring.style.opacity = "1";
       }
+
+      const target = event.target as Element | null;
+      const interactive = target?.closest(
+        'a, button, [role="button"], input, textarea, select, label, [data-cursor="hover"]'
+      );
+      targetScale = interactive ? 1.85 : 1;
+      ring.dataset.state = interactive ? "hover" : "idle";
     };
 
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerover", handleOver);
+    const onLeave = () => {
+      visible = false;
+      dot.style.opacity = "0";
+      ring.style.opacity = "0";
+    };
+
+    const onDown = () => {
+      targetScale *= 0.78;
+    };
+    const onUp = () => {
+      targetScale = ring.dataset.state === "hover" ? 1.85 : 1;
+    };
+
+    const tick = () => {
+      ringPos.x += (pointer.x - ringPos.x) * ease;
+      ringPos.y += (pointer.y - ringPos.y) * ease;
+      ringScale += (targetScale - ringScale) * 0.18;
+
+      dot.style.transform = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%)`;
+      ring.style.transform =
+        `translate3d(${ringPos.x}px, ${ringPos.y}px, 0) translate(-50%, -50%) scale(${ringScale.toFixed(3)})`;
+
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("pointerup", onUp, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
 
     return () => {
-      document.body.classList.remove("has-custom-cursor");
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerover", handleOver);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+      delete document.body.dataset.customCursor;
     };
-  }, [enabled, mouseX, mouseY]);
+  }, [enabled, prefersReducedMotion]);
 
   if (!enabled) return null;
 
   return (
-    <>
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[70] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cream"
-        style={{ x: mouseX, y: mouseY }}
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[70] hidden md:block">
+      <div
+        ref={ringRef}
+        className="absolute left-0 top-0 size-9 rounded-full border opacity-0
+          border-[color-mix(in_srgb,var(--color-gold)_55%,transparent)]
+          shadow-[0_0_22px_-4px_rgba(198,161,91,0.55)]
+          transition-[background-color,border-color,box-shadow] duration-300
+          data-[state=hover]:border-gold-light
+          data-[state=hover]:bg-[color-mix(in_srgb,var(--color-gold)_11%,transparent)]
+          data-[state=hover]:shadow-[0_0_34px_-2px_rgba(230,207,154,0.6)]"
+        data-state="idle"
       />
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[70] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gold-soft/70 text-[10px] font-medium uppercase tracking-[0.2em] text-cream mix-blend-difference"
-        style={{
-          x: ringX,
-          y: ringY,
-          width: isHovering ? 64 : 34,
-          height: isHovering ? 64 : 34,
-        }}
-        transition={{ width: { duration: 0.25 }, height: { duration: 0.25 } }}
-      >
-        {hoverLabel}
-      </motion.div>
-    </>
+      <div
+        ref={dotRef}
+        className="absolute left-0 top-0 size-1.5 rounded-full bg-gold-light opacity-0
+          shadow-[0_0_12px_rgba(230,207,154,0.9)]"
+      />
+    </div>
   );
 }

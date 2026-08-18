@@ -1,15 +1,15 @@
-import { Navbar } from "@/components/ui/Navbar";
-import { Footer } from "@/components/ui/Footer";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { CustomCursor } from "@/components/ui/CustomCursor";
-import { IntroSequence } from "@/components/ui/IntroSequence";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <IntroSequence />
+      <LoadingScreen />
       <CustomCursor />
       <Navbar />
-      <main>{children}</main>
+      <main id="main">{children}</main>
       <Footer />
     </>
   );

@@ -1,105 +1,129 @@
-import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
-import { ExperienceProvider } from "@/lib/motion-context";
+import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Inter } from "next/font/google";
+import { DeviceProvider } from "@/lib/device";
+import { MotionProvider } from "@/lib/motion-provider";
+import { contact, site, socials } from "@/data/site";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
   style: ["normal", "italic"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500"],
+  display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const title = "BMS Agency — Immobilier Premium";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(site.url),
   title: {
-    default: "L'Oro Italiano — Ristorante Italiano di Lusso",
-    template: "%s — L'Oro Italiano",
+    default: title,
+    template: `%s — ${site.name}`,
   },
-  description:
-    "L'authentique élégance de la cuisine italienne. Une expérience gastronomique immersive et cinématique — pâtes fraîches faites maison, pizza au feu de bois, et une carte des vins venue de toute l'Italie.",
+  description: site.description,
+  applicationName: site.name,
   keywords: [
-    "restaurant italien",
-    "gastronomie",
-    "pâtes fraîches",
-    "pizza napolitaine",
-    "réservation restaurant",
-    "restaurant de luxe Paris",
-    "L'Oro Italiano",
+    "agence immobilière",
+    "immobilier premium",
+    "immobilier de luxe",
+    "villa de luxe",
+    "penthouse",
+    "achat immobilier",
+    "vente immobilière",
+    "gestion immobilière",
+    "BMS Agency",
   ],
+  authors: [{ name: site.name }],
+  creator: site.name,
+  publisher: site.name,
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "L'Oro Italiano — Ristorante Italiano di Lusso",
-    description: "L'authentique élégance de la cuisine italienne. Réservez votre table pour une expérience cinématique.",
-    url: siteUrl,
-    siteName: "L'Oro Italiano",
-    locale: "fr_FR",
     type: "website",
+    locale: "fr_FR",
+    url: site.url,
+    siteName: site.name,
+    title,
+    description: site.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "L'Oro Italiano — Ristorante Italiano di Lusso",
-    description: "L'authentique élégance de la cuisine italienne.",
+    title,
+    description: site.description,
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  formatDetection: { telephone: true, address: false, email: true },
 };
 
-const restaurantJsonLd = {
+export const viewport: Viewport = {
+  themeColor: "#07080b",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
+  // Zooming stays available — clamping it would fail WCAG 1.4.4.
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
+/** Structured data so search engines read this as a real estate agency. */
+const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "Restaurant",
-  name: "L'Oro Italiano",
-  servesCuisine: "Italian",
-  priceRange: "€€€",
-  url: siteUrl,
-  telephone: "+33-1-23-45-67-89",
+  "@type": "RealEstateAgent",
+  name: site.name,
+  slogan: site.tagline,
+  description: site.description,
+  url: site.url,
+  email: contact.email,
+  telephone: contact.phoneRaw,
+  priceRange: "€€€€",
+  areaServed: "France",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "12 Rue de la Paix",
-    addressLocality: "Paris",
-    postalCode: "75002",
+    streetAddress: contact.address.street,
+    postalCode: contact.address.postalCode,
+    addressLocality: contact.address.city,
     addressCountry: "FR",
   },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Sunday"],
-      opens: "12:00",
-      closes: "23:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Friday", "Saturday"],
-      opens: "12:00",
-      closes: "00:00",
-    },
-  ],
-  sameAs: [
-    "https://www.instagram.com/",
-    "https://www.facebook.com/",
-    "https://www.tiktok.com/",
-  ],
+  sameAs: socials.map((social) => social.href),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${fraunces.variable} ${inter.variable} h-full`} data-scroll-behavior="smooth">
-      <head>
+    <html
+      lang="fr"
+      className={`${cormorant.variable} ${inter.variable}`}
+      data-scroll-behavior="smooth"
+    >
+      <body className="grain min-h-screen bg-noir text-offwhite antialiased">
+        {/* First stop for keyboard users, before the fixed navbar. */}
+        <a
+          href="#proprietes"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[110]
+            focus:rounded-full focus:bg-gold focus:px-5 focus:py-3 focus:text-sm focus:font-medium
+            focus:text-noir"
+        >
+          Aller au contenu principal
+        </a>
+
+        <DeviceProvider>
+          <MotionProvider>{children}</MotionProvider>
+        </DeviceProvider>
+
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body className="min-h-full bg-noir text-cream antialiased selection:bg-italian-red">
-        <ExperienceProvider>
-          <div className="grain-overlay" aria-hidden="true" />
-          {children}
-        </ExperienceProvider>
       </body>
     </html>
   );

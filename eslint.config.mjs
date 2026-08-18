@@ -12,7 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "_legacy-static-site/**",
+    // Vendored skill packages — third-party sources, not part of the app.
+    ".agents/**",
   ]),
 ]);
 

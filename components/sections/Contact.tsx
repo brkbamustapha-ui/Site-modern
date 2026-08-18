@@ -1,169 +1,376 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { MapPin, Phone, Mail, Clock, Loader2, Check } from "lucide-react";
+import { useActionState, useEffect, useId, useRef } from "react";
+import { useFormStatus } from "react-dom";
+import {
+  ChevronDown,
+  CircleAlert,
+  CircleCheck,
+  LoaderCircle,
+  Mail,
+  MessageCircle,
+  Phone,
+  Send,
+} from "lucide-react";
+import { submitContact } from "@/app/actions/contact";
+import { initialContactState, type ContactState } from "@/lib/contact-schema";
+import { contact, projectTypes, whatsappHref } from "@/data/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { MagneticButton } from "@/components/ui/MagneticButton";
-import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/ui/SocialIcons";
-import { contactSchema } from "@/lib/validations";
+import { Reveal } from "@/components/ui/Reveal";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-type Status = "idle" | "submitting" | "success" | "error";
+const fieldClass =
+  "w-full rounded-[3px] border bg-noir/55 px-4 py-3.5 text-[0.95rem] text-offwhite " +
+  "placeholder:text-steel-dim/70 transition-colors duration-400 " +
+  "focus:outline-none focus:border-gold " +
+  "border-[color-mix(in_srgb,var(--color-steel)_20%,transparent)] " +
+  "hover:border-[color-mix(in_srgb,var(--color-steel)_34%,transparent)]";
 
-const inputClass =
-  "w-full rounded-xl border border-cream/15 bg-transparent px-4 py-3.5 text-sm text-cream placeholder:text-cream/35 focus:border-gold-soft focus:outline-none";
-
-const INFO = [
-  { icon: MapPin, label: "12 Rue de la Paix, 75002 Paris" },
-  { icon: Phone, label: "+33 1 23 45 67 89" },
-  { icon: Mail, label: "reservations@orositaliano.example" },
-  { icon: Clock, label: "Mar–Dim · 12h00–23h00" },
-];
+const labelClass =
+  "mb-2 block text-[0.66rem] font-medium uppercase tracking-[0.18em] text-steel";
 
 export function Contact() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [state, formAction] = useActionState<ContactState, FormData>(
+    submitContact,
+    initialContactState
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+  const uid = useId();
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(formData.entries());
+  // Clear the form once a submission is accepted, so a second enquiry starts clean.
+  useEffect(() => {
+    if (state.status === "success") formRef.current?.reset();
+  }, [state.status]);
 
-    const parsed = contactSchema.safeParse(payload);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const [key, value] of Object.entries(parsed.error.flatten().fieldErrors)) {
-        if (value?.[0]) fieldErrors[key] = value[0];
-      }
-      setErrors(fieldErrors);
-      return;
-    }
-
-    setErrors({});
-    setStatus("submitting");
-
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
-      if (!res.ok) throw new Error("failed");
-      setStatus("success");
-      event.currentTarget.reset();
-    } catch {
-      setStatus("error");
-    }
-  };
+  const fieldId = (name: string) => `${uid}-${name}`;
+  const errorId = (name: string) => `${uid}-${name}-error`;
 
   return (
-    <section id="contact" className="bg-noir-soft px-6 py-28 md:px-10 md:py-36">
-      <div className="mx-auto max-w-7xl">
-        <SectionHeading kicker="Contatti" title="Nous Trouver" />
+    <section
+      id="contact"
+      aria-labelledby="contact-titre"
+      className="relative overflow-hidden border-t border-[color-mix(in_srgb,var(--color-steel)_10%,transparent)] bg-ink py-20 sm:py-28 lg:py-36"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-96
+          bg-[radial-gradient(55%_60%_at_50%_0%,rgba(198,161,91,0.10),transparent_70%)]"
+      />
 
-        <div className="mt-14 grid gap-12 md:grid-cols-2">
-          <div className="space-y-10">
-            <ScrollReveal>
-              <ul className="space-y-4">
-                {INFO.map(({ icon: Icon, label }) => (
-                  <li key={label} className="flex items-center gap-4 text-sm text-cream/75">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cream/15 text-gold-soft">
-                      <Icon size={16} />
-                    </span>
-                    {label}
-                  </li>
-                ))}
+      <div className="relative mx-auto w-full max-w-[1400px] px-5 sm:px-8 lg:px-12">
+        <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+          {/* ---- Left: invitation + direct channels ------------------- */}
+          <div className="flex flex-col gap-9">
+            <SectionHeading
+              eyebrow="Contact"
+              title="Parlons de votre projet immobilier."
+              id="contact-titre"
+              lede="Décrivez-nous votre projet en quelques lignes. Nous vous répondons sous 24 heures ouvrées, avec une première lecture concrète du marché qui vous concerne."
+            />
+
+            <Reveal delay={0.12}>
+              <ul className="flex flex-col gap-3">
+                <DirectChannel
+                  href={whatsappHref}
+                  external
+                  icon={<MessageCircle className="size-[18px]" strokeWidth={1.6} />}
+                  label="WhatsApp"
+                  value="Réponse rapide en journée"
+                />
+                <DirectChannel
+                  href={`mailto:${contact.email}`}
+                  icon={<Mail className="size-[18px]" strokeWidth={1.6} />}
+                  label="Email"
+                  value={contact.email}
+                />
+                <DirectChannel
+                  href={`tel:${contact.phoneRaw}`}
+                  icon={<Phone className="size-[18px]" strokeWidth={1.6} />}
+                  label="Téléphone"
+                  value={contact.phone}
+                />
               </ul>
-              <div className="mt-6 flex gap-3">
-                {[InstagramIcon, FacebookIcon, TikTokIcon].map((Icon, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    data-cursor="View"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-cream/15 text-cream/70 hover:border-gold-soft hover:text-gold-soft"
-                  >
-                    <Icon size={16} />
-                  </a>
-                ))}
-              </div>
-            </ScrollReveal>
+            </Reveal>
 
-            <ScrollReveal delay={0.15}>
-              <div className="relative h-56 overflow-hidden rounded-2xl border border-cream/10 bg-noir">
-                <svg viewBox="0 0 400 220" className="h-full w-full opacity-70" aria-hidden="true">
-                  <path d="M0 40 H400 M0 90 H400 M0 140 H400 M0 190 H400" stroke="#ad8a4f" strokeWidth="0.5" opacity="0.3" />
-                  <path d="M40 0 V220 M120 0 V220 M200 0 V220 M280 0 V220 M360 0 V220" stroke="#ad8a4f" strokeWidth="0.5" opacity="0.3" />
-                  <circle cx="200" cy="110" r="6" fill="#7d1f1a" />
-                  <circle cx="200" cy="110" r="14" fill="none" stroke="#ad8a4f" strokeWidth="1" />
-                </svg>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-noir to-transparent p-4 text-xs uppercase tracking-[0.2em] text-cream/50">
-                  Rue de la Paix, Paris
-                </div>
+            <Reveal delay={0.18}>
+              <div className="glass rounded-[3px] p-6">
+                <p className="text-[0.86rem] leading-relaxed text-steel">
+                  {contact.address.street}, {contact.address.postalCode}{" "}
+                  {contact.address.city}
+                  <br />
+                  <span className="text-steel-dim">{contact.hours}</span>
+                </p>
               </div>
-            </ScrollReveal>
+            </Reveal>
           </div>
 
-          <ScrollReveal delay={0.1}>
-            {status === "success" ? (
-              <div className="flex h-full flex-col items-center justify-center gap-4 rounded-2xl border border-gold-soft/30 bg-noir py-16 text-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft/15 text-gold-soft">
-                  <Check size={28} />
-                </span>
-                <p className="font-display text-2xl italic text-cream">Message envoyé</p>
-                <p className="max-w-sm text-sm text-cream/60">Nous vous répondrons dans les plus brefs délais.</p>
+          {/* ---- Right: form ------------------------------------------ */}
+          <Reveal delay={0.1}>
+            <form
+              ref={formRef}
+              action={formAction}
+              noValidate
+              className="glass flex flex-col gap-5 rounded-[3px] p-6 sm:p-8 lg:p-10"
+            >
+              {/* Honeypot — hidden from people and assistive tech alike. */}
+              <div aria-hidden="true" className="hidden">
+                <label htmlFor={fieldId("company")}>Société</label>
+                <input
+                  id={fieldId("company")}
+                  name="company"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
-                <div>
-                  <label htmlFor="c-name" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Nom
-                  </label>
-                  <input id="c-name" name="name" type="text" required className={inputClass} />
-                  {errors.name && <p className="mt-1.5 text-xs text-italian-red-bright">{errors.name}</p>}
-                </div>
-                <div>
-                  <label htmlFor="c-email" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Email
-                  </label>
-                  <input id="c-email" name="email" type="email" required className={inputClass} />
-                  {errors.email && <p className="mt-1.5 text-xs text-italian-red-bright">{errors.email}</p>}
-                </div>
-                <div>
-                  <label htmlFor="c-subject" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Objet
-                  </label>
-                  <input id="c-subject" name="subject" type="text" className={inputClass} />
-                </div>
-                <div>
-                  <label htmlFor="c-message" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Message
-                  </label>
-                  <textarea id="c-message" name="message" rows={4} required className={cn(inputClass, "resize-none")} />
-                  {errors.message && <p className="mt-1.5 text-xs text-italian-red-bright">{errors.message}</p>}
-                </div>
 
-                {status === "error" && (
-                  <p className="text-sm text-italian-red-bright" role="alert">
-                    Une erreur est survenue. Merci de réessayer.
-                  </p>
-                )}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field
+                  id={fieldId("name")}
+                  errorId={errorId("name")}
+                  label="Nom"
+                  error={state.errors.name}
+                >
+                  <input
+                    id={fieldId("name")}
+                    name="name"
+                    type="text"
+                    required
+                    autoComplete="name"
+                    placeholder="Votre nom"
+                    aria-invalid={Boolean(state.errors.name)}
+                    aria-describedby={state.errors.name ? errorId("name") : undefined}
+                    className={cn(fieldClass, state.errors.name && "border-red-400/70")}
+                  />
+                </Field>
 
-                <MagneticButton>
-                  <button
-                    type="submit"
-                    disabled={status === "submitting"}
-                    className="flex items-center gap-2 rounded-full border border-gold-soft/70 px-8 py-3.5 text-[11px] font-medium uppercase tracking-[0.25em] text-cream transition-colors hover:bg-gold-soft hover:text-noir disabled:opacity-60"
+                <Field
+                  id={fieldId("email")}
+                  errorId={errorId("email")}
+                  label="Email"
+                  error={state.errors.email}
+                >
+                  <input
+                    id={fieldId("email")}
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                    placeholder="vous@exemple.com"
+                    aria-invalid={Boolean(state.errors.email)}
+                    aria-describedby={state.errors.email ? errorId("email") : undefined}
+                    className={cn(fieldClass, state.errors.email && "border-red-400/70")}
+                  />
+                </Field>
+
+                <Field
+                  id={fieldId("phone")}
+                  errorId={errorId("phone")}
+                  label="Téléphone"
+                  optional
+                  error={state.errors.phone}
+                >
+                  <input
+                    id={fieldId("phone")}
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
+                    placeholder="+33 6 00 00 00 00"
+                    aria-invalid={Boolean(state.errors.phone)}
+                    aria-describedby={state.errors.phone ? errorId("phone") : undefined}
+                    className={cn(fieldClass, state.errors.phone && "border-red-400/70")}
+                  />
+                </Field>
+
+                <Field
+                  id={fieldId("projectType")}
+                  errorId={errorId("projectType")}
+                  label="Type de projet"
+                  error={state.errors.projectType}
+                >
+                  {/* A real element rather than a background-image chevron:
+                      it inherits the theme colour and survives Tailwind's
+                      arbitrary-value escaping. */}
+                  <div className="relative">
+                    <select
+                      id={fieldId("projectType")}
+                      name="projectType"
+                      required
+                      defaultValue=""
+                      aria-invalid={Boolean(state.errors.projectType)}
+                      aria-describedby={
+                        state.errors.projectType ? errorId("projectType") : undefined
+                      }
+                      className={cn(
+                        fieldClass,
+                        "appearance-none pr-11",
+                        state.errors.projectType && "border-red-400/70"
+                      )}
+                    >
+                      <option value="" disabled>
+                        Sélectionnez…
+                      </option>
+                      {projectTypes.map((type) => (
+                        <option key={type} value={type} className="bg-anthracite text-offwhite">
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-steel"
+                      strokeWidth={1.6}
+                      aria-hidden="true"
+                    />
+                  </div>
+                </Field>
+              </div>
+
+              <Field
+                id={fieldId("message")}
+                errorId={errorId("message")}
+                label="Message"
+                error={state.errors.message}
+              >
+                <textarea
+                  id={fieldId("message")}
+                  name="message"
+                  required
+                  rows={5}
+                  placeholder="Votre projet, votre secteur de recherche, votre calendrier…"
+                  aria-invalid={Boolean(state.errors.message)}
+                  aria-describedby={state.errors.message ? errorId("message") : undefined}
+                  className={cn(fieldClass, "resize-y", state.errors.message && "border-red-400/70")}
+                />
+              </Field>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <SubmitButton />
+                <p className="text-[0.7rem] leading-relaxed text-steel-dim sm:max-w-[24ch]">
+                  Vos informations restent confidentielles.
+                </p>
+              </div>
+
+              {/* Status region — announced to screen readers on change. */}
+              <div aria-live="polite" role="status" className="min-h-0">
+                {state.status !== "idle" && state.message ? (
+                  <p
+                    className={cn(
+                      "flex items-start gap-2.5 rounded-[3px] border px-4 py-3 text-[0.85rem]",
+                      state.status === "success"
+                        ? "border-gold/45 bg-gold/[0.07] text-gold-light"
+                        : "border-red-400/40 bg-red-400/[0.07] text-red-200"
+                    )}
                   >
-                    {status === "submitting" && <Loader2 size={14} className="animate-spin" />}
-                    {status === "submitting" ? "Envoi..." : "Envoyer"}
-                  </button>
-                </MagneticButton>
-              </form>
-            )}
-          </ScrollReveal>
+                    {state.status === "success" ? (
+                      <CircleCheck className="mt-0.5 size-4 shrink-0" strokeWidth={1.7} aria-hidden="true" />
+                    ) : (
+                      <CircleAlert className="mt-0.5 size-4 shrink-0" strokeWidth={1.7} aria-hidden="true" />
+                    )}
+                    {state.message}
+                  </p>
+                ) : null}
+              </div>
+            </form>
+          </Reveal>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function SubmitButton() {
+  // useFormStatus must live in a child of the form to read its pending state.
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="gold" size="lg" disabled={pending}>
+      {pending ? (
+        <>
+          <LoaderCircle className="size-4 animate-spin" strokeWidth={1.8} aria-hidden="true" />
+          Envoi en cours…
+        </>
+      ) : (
+        <>
+          Envoyer ma demande
+          <Send className="size-4" strokeWidth={1.8} aria-hidden="true" />
+        </>
+      )}
+    </Button>
+  );
+}
+
+function Field({
+  id,
+  errorId,
+  label,
+  optional,
+  error,
+  children,
+}: {
+  id: string;
+  errorId: string;
+  label: string;
+  optional?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+        {optional ? <span className="ml-1.5 text-steel-dim normal-case">(facultatif)</span> : null}
+      </label>
+      {children}
+      {error ? (
+        <p id={errorId} className="mt-1.5 text-[0.76rem] text-red-300">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function DirectChannel({
+  href,
+  icon,
+  label,
+  value,
+  external,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  external?: boolean;
+}) {
+  return (
+    <li>
+      <a
+        href={href}
+        data-cursor="hover"
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        className="group flex min-h-14 items-center gap-4 rounded-[3px] border
+          border-[color-mix(in_srgb,var(--color-steel)_16%,transparent)] px-5 py-3.5
+          transition-[border-color,background-color,transform] duration-500
+          [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]
+          hover:border-gold hover:bg-[color-mix(in_srgb,var(--color-gold)_7%,transparent)]
+          motion-safe:hover:translate-x-1"
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full
+          border border-[color-mix(in_srgb,var(--color-gold)_30%,transparent)] text-gold
+          transition-colors duration-500 group-hover:border-gold group-hover:text-gold-light">
+          {icon}
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[0.63rem] uppercase tracking-[0.2em] text-steel-dim">{label}</span>
+          <span className="truncate text-[0.93rem] text-offwhite">{value}</span>
+        </span>
+      </a>
+    </li>
   );
 }

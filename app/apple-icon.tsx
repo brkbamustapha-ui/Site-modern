@@ -11,20 +11,33 @@ export default function AppleIcon() {
           width: "100%",
           height: "100%",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0a0806",
+          background: "linear-gradient(150deg, #0b0d12 0%, #07080b 60%, #14100a 100%)",
         }}
       >
         <span
           style={{
-            fontSize: 92,
-            fontStyle: "italic",
-            color: "#f4ecd9",
+            fontSize: 84,
+            fontWeight: 500,
+            color: "#e6cf9a",
             fontFamily: "serif",
+            letterSpacing: -2,
           }}
         >
-          D
+          B
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            letterSpacing: 6,
+            color: "#8d93a1",
+            marginTop: 6,
+            textTransform: "uppercase",
+          }}
+        >
+          Agency
         </span>
       </div>
     ),

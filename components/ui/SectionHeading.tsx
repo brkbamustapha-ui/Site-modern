@@ -1,32 +1,83 @@
-import { RevealText } from "./RevealText";
-import { ScrollReveal } from "./ScrollReveal";
+"use client";
+
+import { Reveal } from "./Reveal";
+import { TextReveal } from "./TextReveal";
 import { cn } from "@/lib/utils";
 
+/**
+ * Shared section header: hairline + eyebrow, display title, optional lede.
+ * `as` keeps the heading level correct for the document outline.
+ */
 export function SectionHeading({
-  kicker,
+  eyebrow,
   title,
+  lede,
   align = "left",
+  as: Tag = "h2",
+  id,
   className,
+  titleClassName,
 }: {
-  kicker: string;
+  eyebrow?: string;
   title: string;
+  lede?: string;
   align?: "left" | "center";
+  as?: "h2" | "h3";
+  /** Put on the heading itself so sections can `aria-labelledby` it. */
+  id?: string;
   className?: string;
+  titleClassName?: string;
 }) {
+  const centered = align === "center";
+
   return (
-    <div className={cn(align === "center" && "text-center", className)}>
-      <ScrollReveal>
-        <p className="text-[11px] font-medium uppercase tracking-[0.4em] text-gold-soft">{kicker}</p>
-      </ScrollReveal>
-      <RevealText
-        as="h2"
+    <div
+      className={cn(
+        "flex flex-col gap-5",
+        centered && "items-center text-center",
+        className
+      )}
+    >
+      {eyebrow ? (
+        <Reveal>
+          <span className={cn("flex items-center gap-3.5", centered && "justify-center")}>
+            <span
+              aria-hidden="true"
+              className="h-px w-8 bg-gradient-to-r from-transparent to-gold sm:w-11"
+            />
+            <span className="eyebrow">{eyebrow}</span>
+            {centered ? (
+              <span
+                aria-hidden="true"
+                className="h-px w-8 bg-gradient-to-l from-transparent to-gold sm:w-11"
+              />
+            ) : null}
+          </span>
+        </Reveal>
+      ) : null}
+
+      <Tag
+        id={id}
         className={cn(
-          "mt-4 font-display text-4xl italic leading-[1.05] text-cream md:text-6xl",
-          align === "center" && "justify-center"
+          "font-display text-[clamp(2rem,6vw,3.9rem)] font-light leading-[1.06] tracking-[-0.015em] text-chalk",
+          titleClassName
         )}
       >
-        {title}
-      </RevealText>
+        <TextReveal text={title} />
+      </Tag>
+
+      {lede ? (
+        <Reveal delay={0.12}>
+          <p
+            className={cn(
+              "max-w-[58ch] text-[0.98rem] leading-relaxed text-steel sm:text-[1.03rem]",
+              centered && "mx-auto"
+            )}
+          >
+            {lede}
+          </p>
+        </Reveal>
+      ) : null}
     </div>
   );
 }

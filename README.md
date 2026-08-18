@@ -1,167 +1,156 @@
-# La Dolce Vita — Ristorante Italiano
+# BMS AGENCY — Immobilier Premium
 
-A cinematic, immersive 3D website for a high-end Italian restaurant. Built with Next.js (App Router), TypeScript, Tailwind CSS, React Three Fiber, Framer Motion, Prisma and PostgreSQL.
+Site vitrine haut de gamme pour une agence immobilière, construit autour d'une
+scène 3D temps réel qui se dégrade proprement sur tous les appareils.
 
-The hero, the interactive table scene and every floating ingredient on the plate are procedurally generated Three.js geometry — no external 3D models or stock photography are used, so the whole experience runs from source with zero binary assets.
+**Stack :** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
+React Three Fiber / three.js · Framer Motion · Lucide · Zod.
 
-## Stack
+---
 
-| Layer | Tech |
-| --- | --- |
-| Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict) |
-| Styling | Tailwind CSS v4 (CSS-based theme in `app/globals.css`) |
-| 3D | Three.js, `@react-three/fiber`, `@react-three/drei` |
-| Motion | Framer Motion (reveal animations, magnetic buttons, page transitions) |
-| Database | PostgreSQL + Prisma ORM |
-| Validation | Zod (shared client/server schemas) |
-| Auth (admin) | Passcode + signed HTTP-only session cookie (no third-party auth needed) |
-
-## Project structure
-
-```
-app/
-  (site)/              Public site — layout wires up Navbar/Footer/CustomCursor
-    page.tsx            Home page, assembles all sections
-  admin/
-    login/              Passcode login (public)
-    (protected)/        Auth-gated admin shell (dashboard, menu, reservations, messages, users, settings)
-    actions.ts           Server Actions used by the admin panel (create/update/delete, login/logout)
-  api/
-    products/            GET  — public menu data
-    reservations/         POST — create a reservation · GET (admin) — list reservations
-    contact/              POST — send a contact message
-  icon.tsx, apple-icon.tsx, opengraph-image.tsx   Generated favicons / share image
-  robots.ts, sitemap.ts
-
-components/
-  3d/                  React Three Fiber scenes & primitives (procedural geometry only)
-  ui/                  Cursor, navbar, footer, magnetic buttons, scroll/text reveal
-  sections/            Hero, Menu, Experience (3D table), Story, Chef, Gallery, Reservation, Contact
-  admin/               Admin shell, product form, reservation row actions
-
-lib/
-  prisma.ts             Prisma client singleton
-  data.ts                Query helpers used by Server Components
-  validations.ts          Zod schemas shared by forms + API routes
-  admin-auth.ts            Passcode check + signed session cookie helpers
-  motion-context.tsx        Client context: prefers-reduced-motion, touch detection, device performance tier
-  use-reveal.ts             Scroll-reveal hook (IntersectionObserver + fallback)
-
-prisma/
-  schema.prisma           User, Category, Product, Reservation, ContactMessage, RestaurantContent
-  seed.ts                   Realistic Italian menu + demo content
-  migrations/                Versioned SQL migrations
-```
-
-## Getting started
-
-### 1. Prerequisites
-
-- Node.js 20.9+
-- A PostgreSQL database (local or hosted)
-
-### 2. Install dependencies
+## Démarrer
 
 ```bash
 npm install
+npm run dev      # http://localhost:3000
 ```
-
-### 3. Configure environment variables
-
-Copy the example file and fill in real values:
 
 ```bash
-cp .env.example .env
+npm run build && npm start   # build de production
+npm run lint                 # ESLint
+npx tsc --noEmit             # vérification TypeScript
 ```
 
-| Variable | Description |
+Copiez `.env.example` vers `.env.local` et renseignez `NEXT_PUBLIC_SITE_URL`
+(utilisé pour les URLs canoniques, `sitemap.xml` et les balises Open Graph).
+
+---
+
+## Ce qu'il faut personnaliser
+
+Tout ce qui doit changer avant la mise en ligne est regroupé dans `data/` :
+
+| Fichier | Contenu |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma |
-| `ADMIN_PASSCODE` | Passcode required to sign in at `/admin/login` |
-| `ADMIN_SESSION_SECRET` | Random secret used to sign the admin session cookie |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL, used for SEO metadata and Open Graph tags |
+| `data/site.ts` | Nom, slogan, **coordonnées** (email, téléphone, WhatsApp, adresse), réseaux sociaux, chiffres clés |
+| `data/properties.ts` | Les 6 biens + la propriété vedette |
+| `data/services.ts` | Les 6 services et leurs icônes |
+| `data/process.ts` | Les 5 étapes du processus |
 
-#### Local PostgreSQL with Docker
+> ⚠️ **Coordonnées** : `data/site.ts` contient des valeurs d'exemple
+> (`contact@bms-agency.com`, `+33 1 23 45 67 89`, `12 avenue Montaigne`).
+> Remplacez-les — aucun autre fichier ne code en dur ces informations.
 
-If you don't already have Postgres running locally:
+> ⚠️ **Chiffres clés** : « 10+ années », « 250+ biens », « 98% de clients
+> satisfaits » sont des **placeholders illustratifs**, pas des résultats
+> vérifiés. Remplacez-les par vos données réelles ou supprimez la section.
+> Une mention en ce sens est affichée sous les chiffres dans la section
+> « À propos » ; pensez à la retirer une fois les vrais chiffres en place.
 
-```bash
-docker run --name la-dolce-vita-db \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=la_dolce_vita \
-  -p 5432:5432 -d postgres:16
+### Visuels des biens
+
+Les biens sont illustrés par des **compositions architecturales vectorielles
+générées** (`components/ui/PropertyVisual.tsx`) plutôt que par des photos de
+banque d'images. Ce choix évite les images génériques, pèse quelques kilo-octets,
+reste net à toutes les densités d'écran et ne peut pas casser la mise en page si
+un CDN tombe.
+
+Pour utiliser de vraies photos, renseignez le champ `image` d'un bien :
+
+```ts
+{
+  slug: "villa-solaire",
+  image: "/photos/villa-solaire.webp",   // ou une URL distante
+  // ...
+}
 ```
 
-This matches the default `DATABASE_URL` in `.env.example`.
+La carte utilise alors la photo, et **retombe automatiquement** sur la
+composition générée si le chargement échoue. Pour un hôte distant, ajoutez-le
+à `images.remotePatterns` dans `next.config.ts`.
 
-### 4. Set up the database
+### Formulaire de contact
 
-```bash
-npm run db:migrate   # applies prisma/migrations, creates the schema
-npm run db:seed      # populates categories, dishes, an admin user record, and the "story" content block
+`app/actions/contact.ts` valide la soumission côté serveur (Zod), rejette les
+bots via un honeypot, puis **journalise la demande**. Remplacez le bloc balisé
+`--- Replace this block with your real delivery ---` par votre transport réel
+(Resend, SendGrid, SMTP) ou un webhook CRM. Le schéma partagé vit dans
+`lib/contact-schema.ts` — un module `"use server"` ne peut exporter que des
+fonctions asynchrones.
+
+---
+
+## La 3D et ses garde-fous
+
+La règle du projet : **la 3D ne doit jamais empêcher le site de fonctionner.**
+
+`lib/device.tsx` sonde l'appareil au montage et choisit un niveau de qualité :
+
+| Niveau | Cible | Budget |
+| --- | --- | --- |
+| `ultra` | Desktop avec GPU | DPR ≤ 1.9, ombres, 70 particules, reflets réels sur l'eau |
+| `high` | Portable correct | DPR ≤ 1.5, ombres, 36 particules |
+| `low` | Mobiles / matériel faible | DPR ≤ 1.35, sans ombres, 14 particules, géométrie réduite |
+| `none` | Pas de WebGL, `prefers-reduced-motion`, mode économie de données, connexion 2G | **Aucune 3D** — arrière-plan statique premium |
+
+Les garde-fous, en plus du choix de niveau :
+
+- **three.js n'est téléchargé que si l'appareil y a droit** (`next/dynamic`,
+  `ssr: false`) — un mobile en mode économie de données ne charge jamais le moteur ;
+- l'arrière-plan statique (`StaticHeroBackdrop`) est **toujours monté**, comme
+  poster pendant le chargement puis comme décor définitif si la 3D est écartée ;
+- une erreur de rendu est interceptée par `SceneBoundary` ;
+- la **perte de contexte WebGL** bascule sur l'arrière-plan statique ;
+- un **délai de sécurité de 6 s** : sans signal de la scène, on s'en tient au statique ;
+- la boucle de rendu est **mise en pause** hors écran et quand l'onglet est masqué ;
+- l'écran de chargement se ferme sur **minuterie fixe**, jamais sur l'état de la 3D
+  (et se ferme aussi avec `Échap`).
+
+L'environnement d'éclairage est généré dans la scène à partir de `Lightformer`
+(`frames={1}`) : aucune HDRI n'est téléchargée depuis un CDN.
+
+---
+
+## Accessibilité & mouvement
+
+- `MotionConfig reducedMotion="user"` (`lib/motion-provider.tsx`) neutralise
+  globalement les animations de transformation. Les composants **n'aiguillent
+  jamais leur rendu** sur `useReducedMotion()` : ce hook lit `matchMedia` au
+  premier rendu client mais renvoie `false` côté serveur, ce qui casserait
+  l'hydratation. Le parallaxe passe par une `MotionValue` (`lib/use-parallax.ts`).
+- Lien d'évitement, focus visible, cibles tactiles ≥ 44 px, `aria-*` sur la
+  navigation, le menu mobile et le formulaire, zoom non bloqué.
+- Le curseur personnalisé n'est monté que sur pointeur fin ; le tactile garde
+  le comportement natif.
+
+---
+
+## Structure
+
+```
+app/
+  layout.tsx              métadonnées SEO, polices, JSON-LD RealEstateAgent
+  (site)/page.tsx         assemblage des sections
+  actions/contact.ts      Server Action du formulaire
+  icon · apple-icon · opengraph-image · sitemap · robots
+components/
+  layout/                 Navbar, Footer
+  sections/               Hero, Properties, FeaturedProperty, Services,
+                          About, Process, Contact
+  three/                  Hero3D, HeroScene, Villa, Lighting, CameraRig,
+                          Environmental, SceneBoundary
+  ui/                     PropertyCard, PropertyVisual, CustomCursor,
+                          LoadingScreen, Reveal, TextReveal, ImageReveal,
+                          Button, SectionHeading, StaticHeroBackdrop, SocialIcons
+data/                     contenu éditable
+lib/                      device, motion, utils, schéma de contact
 ```
 
-`npm run db:studio` opens Prisma Studio if you want to browse/edit data visually.
+## Vérifications effectuées
 
-### 5. Run the dev server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) for the public site, and [http://localhost:3000/admin](http://localhost:3000/admin) for the admin panel (passcode = `ADMIN_PASSCODE`).
-
-## Admin panel
-
-`/admin` is gated by a signed, HTTP-only cookie set after the passcode form succeeds (`app/admin/actions.ts`). From the dashboard you can:
-
-- **Menu** — create, edit, delete dishes; toggle availability and "signature dish" status
-- **Reservations** — view bookings, change status (pending/confirmed/cancelled/completed), delete
-- **Messages** — read and manage contact form submissions
-- **Users** — read-only staff directory (`User` model)
-- **Settings** — edit the restaurant's "Our Story" copy shown on the public site
-
-All mutations go through Next.js Server Actions directly against Prisma — no separate REST layer is needed for the admin panel. The public-facing `POST /api/reservations` and `POST /api/contact` routes are the ones consumed by visitors.
-
-## Performance & accessibility
-
-- All Three.js scenes are dynamically imported with `ssr: false` and code-split per section (Hero, Experience) — the 3D bundle is never sent to a page that doesn't render it.
-- `lib/motion-context.tsx` detects device performance (CPU cores, memory, viewport) and exposes a `high | medium | low` tier consumed by every 3D component to scale geometry detail, particle counts, shadow quality and renderer DPR.
-- `prefers-reduced-motion` disables the custom cursor, camera parallax, floating objects and staggered text reveal across the whole site.
-- Touch devices get a self-sustained ambient camera drift instead of pointer-following parallax.
-- Images use `next/image`-compatible formats (AVIF/WebP) where photography is added later (see "Adding real photography" below).
-
-## Adding real photography
-
-The menu, gallery and chef sections currently use art-directed gradient tiles + icons instead of stock photography, so the repository ships with zero binary assets and no licensing concerns. To swap in real photos:
-
-1. Add optimized images to `public/`.
-2. Replace the gradient/icon tile in `components/sections/MenuInteractive.tsx` and `components/sections/Gallery.tsx` with a `next/image`.
-3. Optionally store an image path on `Product.imageQuery` (already part of the schema) and read it from the admin panel.
-
-## Build & deploy
-
-```bash
-npm run build
-npm run start
-```
-
-`next build` type-checks the project and prerenders every static route (icons, sitemap, robots.txt); all data-backed pages are marked `force-dynamic` so they render per-request against your database. Deploy to any Node.js host (Vercel, Fly.io, a container, etc.) with `DATABASE_URL`, `ADMIN_PASSCODE`, `ADMIN_SESSION_SECRET` and `NEXT_PUBLIC_SITE_URL` set in the environment. Run `npm run db:deploy` (`prisma migrate deploy`) against the production database before the first deploy.
-
-## Scripts
-
-| Script | Description |
-| --- | --- |
-| `npm run dev` | Start the dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Start the production server |
-| `npm run lint` | ESLint |
-| `npm run db:migrate` | Create/apply a Prisma migration locally |
-| `npm run db:deploy` | Apply migrations in production |
-| `npm run db:seed` | Seed the database |
-| `npm run db:studio` | Open Prisma Studio |
-
-## Notes
-
-- The previous static single-page site for a different business (a real-estate agency) has been preserved under `_legacy-static-site/` for reference and is excluded from linting/builds.
-- Prisma is pinned to the 6.x line, which uses the classic `datasource { url = env("DATABASE_URL") }` schema format — Prisma 7 moved connection configuration into a separate `prisma.config.ts` + driver-adapter model, which is a bigger migration than this project needs today.
+Build de production, ESLint et `tsc --noEmit` passent sans erreur. Le site a été
+testé dans Chromium sur 8 fenêtres (320 → 2560 px, densités 1× à 3×) :
+aucun débordement horizontal, aucune erreur console. Ont également été vérifiés
+le menu mobile (ouverture, verrouillage du défilement, `Échap`, navigation), le
+formulaire (erreurs de validation et envoi réussi), la navigation au clavier,
+le mode `prefers-reduced-motion` et le rendu **sans WebGL**.
