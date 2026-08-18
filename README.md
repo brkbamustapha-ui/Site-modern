@@ -99,9 +99,14 @@ Deux modes de build, choisis par variable d'environnement :
 ### GitHub Pages (automatique)
 
 `.github/workflows/deploy-pages.yml` construit l'export statique et le publie à
-chaque push sur `main`. Le workflow active Pages tout seul, et déduit
-`BASE_PATH` / `NEXT_PUBLIC_SITE_URL` de la configuration Pages — rien à régler à
-la main.
+chaque push sur `main`. Il déduit `BASE_PATH` et `NEXT_PUBLIC_SITE_URL` de la
+configuration Pages — rien à renseigner à la main.
+
+**Une action manuelle est requise une seule fois** : dépôt → *Settings* →
+*Pages* → *Source* : **GitHub Actions**. Le `GITHUB_TOKEN` du workflow n'a pas le
+droit de créer le site Pages lui-même (l'API répond `Resource not accessible by
+integration`), donc cette étape ne peut pas être automatisée. Une fois activée,
+chaque push publie tout seul.
 
 Deux détails qui comptent pour un hébergement en sous-répertoire :
 

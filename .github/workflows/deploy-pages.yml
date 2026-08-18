@@ -31,13 +31,16 @@ jobs:
           node-version: 22
           cache: npm
 
-      # `enablement: true` turns Pages on for the repo if it is not already,
-      # and reports the base path the site will be served from.
+      # Reads the repo's Pages config and reports the base path and URL the
+      # site will be served from.
+      #
+      # Pages must be enabled once by hand first: repo Settings -> Pages ->
+      # Source: "GitHub Actions". The workflow GITHUB_TOKEN is not allowed to
+      # create the Pages site itself (the API answers "Resource not accessible
+      # by integration"), so `enablement: true` cannot do it for you.
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - run: npm ci
 
