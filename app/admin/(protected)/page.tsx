@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       <h1 className="font-display text-3xl italic text-cream">Dashboard</h1>
-      <p className="mt-1 text-sm text-cream/50">A quick overview of La Dolce Vita.</p>
+      <p className="mt-1 text-sm text-cream/50">A quick overview of L&apos;Oro Italiano.</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, href }) => (

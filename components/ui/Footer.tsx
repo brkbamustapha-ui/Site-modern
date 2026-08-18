@@ -5,10 +5,10 @@ import { MagneticButton } from "./MagneticButton";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "./SocialIcons";
 
 const NAV = [
-  { label: "Home", href: "#home" },
+  { label: "Accueil", href: "#home" },
   { label: "Menu", href: "#menu" },
-  { label: "About", href: "#about" },
-  { label: "Gallery", href: "#gallery" },
+  { label: "Histoire", href: "#about" },
+  { label: "Galerie", href: "#gallery" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -25,9 +25,10 @@ export function Footer() {
         <ScrollReveal>
           <div className="grid gap-14 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
             <div>
-              <p className="font-display text-3xl italic text-cream">La Dolce Vita</p>
+              <p className="font-display text-3xl italic text-cream">L&apos;Oro Italiano</p>
               <p className="mt-4 max-w-xs text-sm text-cream/60">
-                Authentic Italian cuisine, reimagined. A cinematic dining experience in the heart of Paris.
+                L&apos;authentique élégance de la cuisine italienne. Une expérience gastronomique cinématique
+                au cœur de Paris.
               </p>
               <div className="mt-6 flex gap-4">
                 {SOCIALS.map(({ label, href, icon: Icon }) => (
@@ -47,7 +48,7 @@ export function Footer() {
             </div>
 
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold-soft">Navigate</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold-soft">Navigation</p>
               <ul className="mt-5 space-y-3">
                 {NAV.map((item) => (
                   <li key={item.href}>
@@ -60,7 +61,7 @@ export function Footer() {
             </div>
 
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold-soft">Visit</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold-soft">Adresse</p>
               <address className="mt-5 space-y-2 text-sm not-italic text-cream/70">
                 <p>12 Rue de la Paix</p>
                 <p>75002 Paris, France</p>
@@ -70,8 +71,8 @@ export function Footer() {
                   </a>
                 </p>
                 <p>
-                  <a href="mailto:reservations@ladolcevita.example" className="hover:text-cream">
-                    reservations@ladolcevita.example
+                  <a href="mailto:reservations@orositaliano.example" className="hover:text-cream">
+                    reservations@orositaliano.example
                   </a>
                 </p>
               </address>
@@ -80,7 +81,7 @@ export function Footer() {
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold-soft">Newsletter</p>
               <p className="mt-5 text-sm text-cream/60">
-                Seasonal menus, private events and stories from our kitchen.
+                Menus de saison, événements privés et histoires de notre cuisine.
               </p>
               <form
                 className="mt-4 flex items-center gap-2 border-b border-cream/20 pb-2"
@@ -89,8 +90,8 @@ export function Footer() {
                 <input
                   type="email"
                   required
-                  placeholder="Your email"
-                  aria-label="Email address"
+                  placeholder="Votre email"
+                  aria-label="Adresse email"
                   className="w-full bg-transparent text-sm text-cream placeholder:text-cream/40 focus:outline-none"
                 />
                 <MagneticButton>
@@ -98,7 +99,7 @@ export function Footer() {
                     type="submit"
                     className="text-[11px] font-medium uppercase tracking-[0.2em] text-gold-soft hover:text-cream"
                   >
-                    Join
+                    S&apos;abonner
                   </button>
                 </MagneticButton>
               </form>
@@ -108,13 +109,13 @@ export function Footer() {
 
         <ScrollReveal delay={0.15}>
           <div className="mt-16 select-none text-center font-display text-[16vw] italic leading-none text-cream/5 md:text-[9vw]">
-            La Dolce Vita
+            L&apos;Oro Italiano
           </div>
         </ScrollReveal>
 
         <div className="flex flex-col items-center justify-between gap-3 border-t border-cream/10 pt-6 text-xs text-cream/40 md:flex-row">
-          <p>© {new Date().getFullYear()} La Dolce Vita. All rights reserved.</p>
-          <p>Crafted with care, one table at a time.</p>
+          <p>© {new Date().getFullYear()} L&apos;Oro Italiano. Tous droits réservés.</p>
+          <p>Façonné avec soin, une table à la fois.</p>
         </div>
       </div>
     </footer>

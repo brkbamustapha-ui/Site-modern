@@ -13,7 +13,7 @@ export default async function AdminLoginPage({
   return (
     <div className="flex min-h-svh items-center justify-center bg-noir px-6">
       <div className="w-full max-w-sm rounded-2xl border border-cream/10 bg-noir-soft p-8">
-        <p className="font-display text-2xl italic text-cream">La Dolce Vita</p>
+        <p className="font-display text-2xl italic text-cream">L&apos;Oro Italiano</p>
         <p className="mt-1 text-xs uppercase tracking-[0.3em] text-cream/40">Admin Access</p>
 
         <form action={loginAction} className="mt-8 space-y-4">

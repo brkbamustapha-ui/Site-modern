@@ -32,7 +32,7 @@ export function Hero() {
         </motion.p>
 
         <h1 className="mt-6 max-w-4xl font-display text-6xl italic leading-[0.95] text-cream sm:text-7xl md:text-8xl">
-          <RevealText delay={0.4}>La Dolce Vita</RevealText>
+          <RevealText delay={0.4}>L&apos;Oro Italiano</RevealText>
         </h1>
 
         <motion.p
@@ -41,7 +41,7 @@ export function Hero() {
           transition={{ delay: 1.1, duration: 0.8 }}
           className="mt-6 max-w-md text-base text-cream/70 md:text-lg"
         >
-          Authentic Italian cuisine, reimagined.
+          L&apos;autentica eleganza della cucina italiana.
         </motion.p>
 
         <motion.div
@@ -52,20 +52,20 @@ export function Hero() {
         >
           <MagneticButton>
             <a
-              href="#menu"
-              data-cursor="View"
+              href="#reservation"
+              data-cursor="Book"
               className="rounded-full bg-cream px-8 py-4 text-[11px] font-medium uppercase tracking-[0.25em] text-noir transition-colors hover:bg-gold-soft"
             >
-              Explore Menu
+              Réserver une table
             </a>
           </MagneticButton>
           <MagneticButton>
             <a
-              href="#reservation"
-              data-cursor="Book"
+              href="#menu"
+              data-cursor="View"
               className="rounded-full border border-cream/40 px-8 py-4 text-[11px] font-medium uppercase tracking-[0.25em] text-cream transition-colors hover:border-gold-soft hover:text-gold-soft"
             >
-              Book a Table
+              Découvrir le menu
             </a>
           </MagneticButton>
         </motion.div>

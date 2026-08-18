@@ -284,11 +284,11 @@ async function main() {
   }
 
   await prisma.user.upsert({
-    where: { email: "admin@ladolcevita.example" },
+    where: { email: "admin@orositaliano.example" },
     update: {},
     create: {
       name: "Admin",
-      email: "admin@ladolcevita.example",
+      email: "admin@orositaliano.example",
       password: "changeme-hash-this-in-production",
       role: "ADMIN",
     },
@@ -300,7 +300,7 @@ async function main() {
     create: {
       key: "story",
       value:
-        "Fondé par la famille Romano, La Dolce Vita est né d'un rêve simple : faire voyager Paris jusqu'aux collines toscanes, une table à la fois. Depuis 2012, nos chefs travaillent des produits importés directement d'Italie et une pâte à pizza fermentée 48 heures, dans le respect absolu de la tradition.",
+        "Fondé par la famille Romano, L'Oro Italiano est né d'un rêve simple : faire voyager Paris jusqu'aux collines toscanes, une table à la fois. Depuis 2012, nos chefs travaillent des produits importés directement d'Italie et une pâte à pizza fermentée 48 heures, dans le respect absolu de la tradition.",
     },
   });
 
