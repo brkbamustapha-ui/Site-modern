@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "la-dolce-vita",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-11-01",
+  // nodejs_compat gives the Worker node:crypto (admin session HMAC) and the
+  // TCP sockets that the Postgres driver needs.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+
+  // DATABASE_URL, ADMIN_PASSCODE and ADMIN_SESSION_SECRET are secrets — set
+  // them with `wrangler secret put <NAME>`, never in this file.
+  //
+  // NEXT_PUBLIC_SITE_URL is inlined at build time, so it belongs in .env
+  // (or the CI environment) before `opennextjs-cloudflare build`.
+}

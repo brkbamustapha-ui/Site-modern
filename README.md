@@ -57,8 +57,15 @@ prisma/
 
 ### 1. Prerequisites
 
-- Node.js 20.9+
-- A PostgreSQL database (local or hosted)
+- Node.js 22+ (the Neon driver uses the global `WebSocket`)
+- A [Neon](https://neon.tech) PostgreSQL project (free tier is enough)
+
+> **Why Neon rather than a local Postgres container?** The app is deployed to
+> Cloudflare Workers, which cannot open the raw TCP socket the standard `pg`
+> driver needs, so Prisma goes through Neon's WebSocket-based serverless driver
+> (`@prisma/adapter-neon`). That same driver is used in development, which means
+> `DATABASE_URL` must point at Neon — a plain `localhost:5432` Postgres will not
+> answer it. Neon's free per-developer branches are designed for exactly this.
 
 ### 2. Install dependencies
 
@@ -81,24 +88,21 @@ cp .env.example .env
 | `ADMIN_SESSION_SECRET` | Random secret used to sign the admin session cookie |
 | `NEXT_PUBLIC_SITE_URL` | Public site URL, used for SEO metadata and Open Graph tags |
 
-#### Local PostgreSQL with Docker
+Neon hands you two connection strings. Both are needed, for different things:
 
-If you don't already have Postgres running locally:
-
-```bash
-docker run --name la-dolce-vita-db \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=la_dolce_vita \
-  -p 5432:5432 -d postgres:16
-```
-
-This matches the default `DATABASE_URL` in `.env.example`.
+| String | Contains | Used by |
+| --- | --- | --- |
+| **Pooled** | `-pooler` in the host | the app at runtime → `DATABASE_URL` |
+| **Direct** | no `-pooler` | `prisma migrate` / `db:seed`, which use plain TCP |
 
 ### 4. Set up the database
 
+Migrations and seeding bypass the serverless driver, so point them at the
+**direct** string:
+
 ```bash
-npm run db:migrate   # applies prisma/migrations, creates the schema
-npm run db:seed      # populates categories, dishes, an admin user record, and the "story" content block
+DATABASE_URL="<direct-string>" npm run db:migrate   # applies prisma/migrations
+DATABASE_URL="<direct-string>" npm run db:seed      # categories, dishes, admin user, "story" block
 ```
 
 `npm run db:studio` opens Prisma Studio if you want to browse/edit data visually.
@@ -148,6 +152,66 @@ npm run start
 
 `next build` type-checks the project and prerenders every static route (icons, sitemap, robots.txt); all data-backed pages are marked `force-dynamic` so they render per-request against your database. Deploy to any Node.js host (Vercel, Fly.io, a container, etc.) with `DATABASE_URL`, `ADMIN_PASSCODE`, `ADMIN_SESSION_SECRET` and `NEXT_PUBLIC_SITE_URL` set in the environment. Run `npm run db:deploy` (`prisma migrate deploy`) against the production database before the first deploy.
 
+## Deploying to Cloudflare Workers
+
+The app runs on Cloudflare Workers through the [OpenNext](https://opennext.js.org/cloudflare) adapter. Two pieces make that possible:
+
+- `nodejs_compat` (set in `wrangler.jsonc`) gives the Worker `node:crypto`, used for the admin session HMAC.
+- Prisma talks to Postgres through **Neon's serverless driver** (`@prisma/adapter-neon`), which uses WebSocket/HTTP instead of a raw TCP socket. Workers cannot open the TCP connection the standard `pg` driver expects.
+
+### 1. Create the database (Neon)
+
+Create a project at [neon.tech](https://neon.tech). From the dashboard, copy both connection strings:
+
+| String | Contains | Used by |
+| --- | --- | --- |
+| **Pooled** | `-pooler` in the host | the Worker at runtime (`DATABASE_URL`) |
+| **Direct** | no `-pooler` | migrations and seeding, which use plain TCP |
+
+Apply the schema and (optionally) the demo menu, using the **direct** string:
+
+```bash
+DATABASE_URL="<direct-string>" npm run db:deploy
+DATABASE_URL="<direct-string>" npm run db:seed
+```
+
+### 2. Connect the repository to Cloudflare
+
+In the Cloudflare dashboard: **Workers & Pages → Create → Workers → Import a repository**, then pick this repo and branch. Set:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run cf:build` |
+| Deploy command | `npx wrangler deploy` |
+
+`prisma generate` runs automatically via `postinstall`.
+
+### 3. Set the environment
+
+Add these as **encrypted secrets** on the Worker (Settings → Variables and Secrets):
+
+| Name | Value |
+| --- | --- |
+| `DATABASE_URL` | the Neon **pooled** connection string |
+| `ADMIN_PASSCODE` | a long random passcode |
+| `ADMIN_SESSION_SECRET` | `openssl rand -hex 32` |
+
+`NEXT_PUBLIC_SITE_URL` is different: `NEXT_PUBLIC_*` values are inlined at build time, so add it as a **build variable** (plain text, not a secret) set to your final URL — e.g. `https://la-dolce-vita.<subdomain>.workers.dev` or your custom domain.
+
+Every push to the connected branch now builds and deploys automatically.
+
+### Deploying from your own machine instead
+
+```bash
+npx wrangler login          # opens a browser to authorise the CLI
+npx wrangler secret put DATABASE_URL
+npx wrangler secret put ADMIN_PASSCODE
+npx wrangler secret put ADMIN_SESSION_SECRET
+npm run cf:deploy
+```
+
+`npm run cf:preview` builds and serves the Worker locally on workerd first, which is the quickest way to catch a Workers-only problem before shipping.
+
 ## Scripts
 
 | Script | Description |
@@ -160,6 +224,9 @@ npm run start
 | `npm run db:deploy` | Apply migrations in production |
 | `npm run db:seed` | Seed the database |
 | `npm run db:studio` | Open Prisma Studio |
+| `npm run cf:build` | Build the Cloudflare Worker bundle (OpenNext) |
+| `npm run cf:preview` | Run the Worker locally on workerd |
+| `npm run cf:deploy` | Build and deploy to Cloudflare Workers |
 
 ## Security model
 
