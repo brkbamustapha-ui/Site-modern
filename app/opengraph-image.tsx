@@ -19,13 +19,13 @@ export default function OpengraphImage() {
         }}
       >
         <span style={{ fontSize: 22, letterSpacing: 12, color: "#c7ab77", textTransform: "uppercase" }}>
-          Ristorante Italiano
+          Ristorante Italiano di Lusso
         </span>
-        <span style={{ fontSize: 108, fontStyle: "italic", fontFamily: "serif", marginTop: 24 }}>
-          La Dolce Vita
+        <span style={{ fontSize: 96, fontStyle: "italic", fontFamily: "serif", marginTop: 24 }}>
+          L&apos;Oro Italiano
         </span>
         <span style={{ fontSize: 26, marginTop: 24, color: "#f4ecd9cc" }}>
-          Authentic Italian cuisine, reimagined.
+          L&apos;autentica eleganza della cucina italiana.
         </span>
       </div>
     ),

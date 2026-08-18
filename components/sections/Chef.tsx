@@ -17,8 +17,8 @@ export function Chef() {
           <SectionHeading kicker="Il Nostro Chef" title="Massimo Romano" />
           <ScrollReveal delay={0.15}>
             <p className="mt-8 max-w-xl text-base leading-relaxed text-cream/65 md:text-lg">
-              Formé à Bologne puis affiné dans les cuisines de Toscane, le chef Massimo Romano dirige La Dolce
-              Vita depuis son ouverture. Sa philosophie tient en une phrase : respecter le produit avant tout,
+              Formé à Bologne puis affiné dans les cuisines de Toscane, le chef Massimo Romano dirige L&apos;Oro
+              Italiano depuis son ouverture. Sa philosophie tient en une phrase : respecter le produit avant tout,
               ne jamais le maquiller.
             </p>
           </ScrollReveal>

@@ -8,7 +8,7 @@ export async function Menu() {
   return (
     <section id="menu" className="bg-noir px-6 py-28 md:px-10 md:py-36">
       <div className="mx-auto max-w-7xl">
-        <SectionHeading kicker="Il Menu" title="Crafted with Tradition" />
+        <SectionHeading kicker="Il Menu" title="Façonné par la Tradition" />
         <div className="mt-14">
           <MenuInteractive categories={categories} />
         </div>

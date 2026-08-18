@@ -26,7 +26,7 @@ export function AdminShell({
   return (
     <div className="flex min-h-svh">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-cream/10 bg-noir-soft px-5 py-8 md:flex">
-        <p className="px-2 font-display text-xl italic text-cream">La Dolce Vita</p>
+        <p className="px-2 font-display text-xl italic text-cream">L&apos;Oro Italiano</p>
         <p className="px-2 text-[10px] uppercase tracking-[0.3em] text-cream/40">Admin</p>
 
         <nav className="mt-10 flex flex-1 flex-col gap-1">

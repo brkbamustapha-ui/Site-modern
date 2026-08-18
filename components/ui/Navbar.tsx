@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import { MagneticButton } from "./MagneticButton";
 
 const LINKS = [
-  { label: "Home", href: "#home" },
+  { label: "Accueil", href: "#home" },
   { label: "Menu", href: "#menu" },
-  { label: "About", href: "#about" },
-  { label: "Experience", href: "#experience" },
-  { label: "Gallery", href: "#gallery" },
+  { label: "Histoire", href: "#about" },
+  { label: "Expérience", href: "#experience" },
+  { label: "Galerie", href: "#gallery" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -52,7 +52,7 @@ export function Navbar() {
           data-cursor="Home"
           className="font-display text-xl italic tracking-wide text-cream"
         >
-          La Dolce Vita
+          L&apos;Oro Italiano
         </a>
 
         <ul className="hidden items-center gap-9 md:flex">
@@ -76,7 +76,7 @@ export function Navbar() {
               data-cursor="Book"
               className="rounded-full border border-gold-soft/70 px-6 py-2.5 text-[11px] font-medium uppercase tracking-[0.25em] text-cream transition-colors hover:bg-gold-soft hover:text-noir"
             >
-              Book a Table
+              Réserver une table
             </a>
           </MagneticButton>
         </div>
@@ -123,7 +123,7 @@ export function Navbar() {
               transition={{ delay: 0.08 * LINKS.length, duration: 0.5 }}
               className="mt-4 w-fit rounded-full border border-gold-soft/70 px-7 py-3 text-xs font-medium uppercase tracking-[0.25em] text-cream"
             >
-              Book a Table
+              Réserver une table
             </motion.a>
           </motion.div>
         )}

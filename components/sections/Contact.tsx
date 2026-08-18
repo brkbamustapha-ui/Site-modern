@@ -17,8 +17,8 @@ const inputClass =
 const INFO = [
   { icon: MapPin, label: "12 Rue de la Paix, 75002 Paris" },
   { icon: Phone, label: "+33 1 23 45 67 89" },
-  { icon: Mail, label: "reservations@ladolcevita.example" },
-  { icon: Clock, label: "Tue–Sun · 12:00–23:00" },
+  { icon: Mail, label: "reservations@orositaliano.example" },
+  { icon: Clock, label: "Mar–Dim · 12h00–23h00" },
 ];
 
 export function Contact() {
@@ -60,7 +60,7 @@ export function Contact() {
   return (
     <section id="contact" className="bg-noir-soft px-6 py-28 md:px-10 md:py-36">
       <div className="mx-auto max-w-7xl">
-        <SectionHeading kicker="Contatti" title="Find Us" />
+        <SectionHeading kicker="Contatti" title="Nous Trouver" />
 
         <div className="mt-14 grid gap-12 md:grid-cols-2">
           <div className="space-y-10">
@@ -110,14 +110,14 @@ export function Contact() {
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft/15 text-gold-soft">
                   <Check size={28} />
                 </span>
-                <p className="font-display text-2xl italic text-cream">Message sent</p>
-                <p className="max-w-sm text-sm text-cream/60">We&apos;ll get back to you shortly.</p>
+                <p className="font-display text-2xl italic text-cream">Message envoyé</p>
+                <p className="max-w-sm text-sm text-cream/60">Nous vous répondrons dans les plus brefs délais.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-5">
                 <div>
                   <label htmlFor="c-name" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Name
+                    Nom
                   </label>
                   <input id="c-name" name="name" type="text" required className={inputClass} />
                   {errors.name && <p className="mt-1.5 text-xs text-italian-red-bright">{errors.name}</p>}
@@ -131,7 +131,7 @@ export function Contact() {
                 </div>
                 <div>
                   <label htmlFor="c-subject" className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-cream/50">
-                    Subject
+                    Objet
                   </label>
                   <input id="c-subject" name="subject" type="text" className={inputClass} />
                 </div>
@@ -145,7 +145,7 @@ export function Contact() {
 
                 {status === "error" && (
                   <p className="text-sm text-italian-red-bright" role="alert">
-                    Something went wrong. Please try again.
+                    Une erreur est survenue. Merci de réessayer.
                   </p>
                 )}
 
@@ -156,7 +156,7 @@ export function Contact() {
                     className="flex items-center gap-2 rounded-full border border-gold-soft/70 px-8 py-3.5 text-[11px] font-medium uppercase tracking-[0.25em] text-cream transition-colors hover:bg-gold-soft hover:text-noir disabled:opacity-60"
                   >
                     {status === "submitting" && <Loader2 size={14} className="animate-spin" />}
-                    {status === "submitting" ? "Sending..." : "Send Message"}
+                    {status === "submitting" ? "Envoi..." : "Envoyer"}
                   </button>
                 </MagneticButton>
               </form>

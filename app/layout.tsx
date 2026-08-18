@@ -21,38 +21,39 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "La Dolce Vita — Ristorante Italiano",
-    template: "%s — La Dolce Vita",
+    default: "L'Oro Italiano — Ristorante Italiano di Lusso",
+    template: "%s — L'Oro Italiano",
   },
   description:
-    "Authentic Italian cuisine, reimagined. An immersive, cinematic dining experience — handmade pasta, wood-fired pizza, and a wine list from every corner of Italy.",
+    "L'authentique élégance de la cuisine italienne. Une expérience gastronomique immersive et cinématique — pâtes fraîches faites maison, pizza au feu de bois, et une carte des vins venue de toute l'Italie.",
   keywords: [
-    "Italian restaurant",
-    "fine dining",
-    "pasta",
-    "pizza napoletana",
-    "restaurant réservation",
-    "La Dolce Vita",
+    "restaurant italien",
+    "gastronomie",
+    "pâtes fraîches",
+    "pizza napolitaine",
+    "réservation restaurant",
+    "restaurant de luxe Paris",
+    "L'Oro Italiano",
   ],
   openGraph: {
-    title: "La Dolce Vita — Ristorante Italiano",
-    description: "Authentic Italian cuisine, reimagined. Book your table for a cinematic dining experience.",
+    title: "L'Oro Italiano — Ristorante Italiano di Lusso",
+    description: "L'authentique élégance de la cuisine italienne. Réservez votre table pour une expérience cinématique.",
     url: siteUrl,
-    siteName: "La Dolce Vita",
-    locale: "en_US",
+    siteName: "L'Oro Italiano",
+    locale: "fr_FR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "La Dolce Vita — Ristorante Italiano",
-    description: "Authentic Italian cuisine, reimagined.",
+    title: "L'Oro Italiano — Ristorante Italiano di Lusso",
+    description: "L'authentique élégance de la cuisine italienne.",
   },
 };
 
 const restaurantJsonLd = {
   "@context": "https://schema.org",
   "@type": "Restaurant",
-  name: "La Dolce Vita",
+  name: "L'Oro Italiano",
   servesCuisine: "Italian",
   priceRange: "€€€",
   url: siteUrl,
@@ -87,7 +88,7 @@ const restaurantJsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} h-full`} data-scroll-behavior="smooth">
+    <html lang="fr" className={`${fraunces.variable} ${inter.variable} h-full`} data-scroll-behavior="smooth">
       <head>
         <script
           type="application/ld+json"

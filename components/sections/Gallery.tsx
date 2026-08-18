@@ -19,7 +19,7 @@ export function Gallery() {
   return (
     <section id="gallery" className="bg-noir-soft px-6 py-28 md:px-10 md:py-36">
       <div className="mx-auto max-w-7xl">
-        <SectionHeading kicker="Galleria" title="A Taste of the Room" />
+        <SectionHeading kicker="Galleria" title="Un Avant-Goût des Lieux" />
 
         <div className="mt-14 grid auto-rows-[220px] grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           {TILES.map((tile, i) => {
