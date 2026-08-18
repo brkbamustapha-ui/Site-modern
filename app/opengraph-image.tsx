@@ -3,6 +3,10 @@ import { site } from "@/data/site";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+// Rendered once at build time. Required for `output: export`, and a
+// no-op for the server build since these images never vary.
+export const dynamic = "force-static";
 export const alt = "BMS Agency — Immobilier Premium";
 
 export default function OpengraphImage() {

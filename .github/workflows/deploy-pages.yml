@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+# GitHub Pages serves static files only, so this builds the export variant
+# (STATIC_EXPORT=1). The server build — and with it a server-side contact
+# endpoint — stays available for hosts that run Node.
+on:
+  push:
+    branches:
+      - main
+      - claude/bms-agency-luxury-real-estate-evj8ai
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a newer commit supersede an in-flight deploy rather than queueing behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `enablement: true` turns Pages on for the repo if it is not already,
+      # and reports the base path the site will be served from.
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - run: npm ci
+
+      - name: Build static export
+        env:
+          STATIC_EXPORT: "1"
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

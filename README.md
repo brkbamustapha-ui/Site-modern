@@ -71,12 +71,49 @@ composition générée si le chargement échoue. Pour un hôte distant, ajoutez-
 
 ### Formulaire de contact
 
-`app/actions/contact.ts` valide la soumission côté serveur (Zod), rejette les
-bots via un honeypot, puis **journalise la demande**. Remplacez le bloc balisé
-`--- Replace this block with your real delivery ---` par votre transport réel
-(Resend, SendGrid, SMTP) ou un webhook CRM. Le schéma partagé vit dans
-`lib/contact-schema.ts` — un module `"use server"` ne peut exporter que des
-fonctions asynchrones.
+Le formulaire valide les champs côté client (`lib/contact-schema.ts`) puis :
+
+- si `NEXT_PUBLIC_CONTACT_ENDPOINT` est défini, il envoie un POST JSON à cette
+  URL (votre propre route API, Formspree, un webhook CRM) ;
+- sinon, il remet au visiteur un message **WhatsApp ou email déjà rédigé**.
+
+Ce repli est volontaire : sans transport configuré, mieux vaut donner à la
+personne un moyen d'aboutir que d'accepter sa demande et la perdre. Un envoi qui
+échoue retombe sur le même repli.
+
+> Le formulaire n'a pas de validation serveur, parce qu'il n'y a pas de serveur
+> dans la version statique. Si vous ajoutez un endpoint, validez-y les données :
+> un POST peut arriver sans passer par le formulaire.
+
+---
+
+## Déploiement
+
+Deux modes de build, choisis par variable d'environnement :
+
+| Commande | Sortie | Pour |
+| --- | --- | --- |
+| `npm run build` | build serveur Next.js | Vercel, Node, Docker — permet un endpoint de contact côté serveur |
+| `npm run build:static` | export statique dans `out/` | GitHub Pages, Netlify, tout hébergeur de fichiers |
+
+### GitHub Pages (automatique)
+
+`.github/workflows/deploy-pages.yml` construit l'export statique et le publie à
+chaque push sur `main`. Le workflow active Pages tout seul, et déduit
+`BASE_PATH` / `NEXT_PUBLIC_SITE_URL` de la configuration Pages — rien à régler à
+la main.
+
+Deux détails qui comptent pour un hébergement en sous-répertoire :
+
+- `public/.nojekyll` empêche Jekyll d'ignorer le dossier `_next/` ;
+- les liens d'icônes sont déclarés explicitement dans `app/layout.tsx`, car
+  Next ne leur applique pas `basePath` et la favicon renverrait un 404.
+
+### Vercel
+
+Connectez le dépôt sur vercel.com : le build serveur est détecté sans
+configuration. Renseignez `NEXT_PUBLIC_SITE_URL`, et
+`NEXT_PUBLIC_CONTACT_ENDPOINT` si vous voulez un envoi serveur.
 
 ---
 
@@ -131,7 +168,6 @@ L'environnement d'éclairage est généré dans la scène à partir de `Lightfor
 app/
   layout.tsx              métadonnées SEO, polices, JSON-LD RealEstateAgent
   (site)/page.tsx         assemblage des sections
-  actions/contact.ts      Server Action du formulaire
   icon · apple-icon · opengraph-image · sitemap · robots
 components/
   layout/                 Navbar, Footer
@@ -143,14 +179,19 @@ components/
                           LoadingScreen, Reveal, TextReveal, ImageReveal,
                           Button, SectionHeading, StaticHeroBackdrop, SocialIcons
 data/                     contenu éditable
-lib/                      device, motion, utils, schéma de contact
+lib/                      device, motion, parallaxe, validation du contact
 ```
 
 ## Vérifications effectuées
 
-Build de production, ESLint et `tsc --noEmit` passent sans erreur. Le site a été
-testé dans Chromium sur 8 fenêtres (320 → 2560 px, densités 1× à 3×) :
-aucun débordement horizontal, aucune erreur console. Ont également été vérifiés
-le menu mobile (ouverture, verrouillage du défilement, `Échap`, navigation), le
-formulaire (erreurs de validation et envoi réussi), la navigation au clavier,
-le mode `prefers-reduced-motion` et le rendu **sans WebGL**.
+Les deux builds (serveur et export statique), ESLint et `tsc --noEmit` passent
+sans erreur. Le site a été testé dans Chromium sur 8 fenêtres (320 → 2560 px,
+densités 1× à 3×) : aucun débordement horizontal, aucune erreur console. Ont
+également été vérifiés le menu mobile (ouverture, verrouillage du défilement,
+`Échap`, navigation), le formulaire (erreurs de validation puis remise du
+message pré-rempli), la navigation au clavier, le mode
+`prefers-reduced-motion` et le rendu **sans WebGL**.
+
+L'export statique a en plus été servi depuis un sous-répertoire `/Site-modern/`,
+comme le fait GitHub Pages : aucune requête en échec, polices auto-hébergées
+chargées, scène 3D active.

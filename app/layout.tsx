@@ -22,6 +22,13 @@ const inter = Inter({
 
 const title = "BMS Agency — Immobilier Premium";
 
+/**
+ * Next does not prefix the auto-injected icon links with `basePath`, so on a
+ * subdirectory host (GitHub Pages serves this repo from /Site-modern) the
+ * favicon would 404. Declaring them explicitly keeps both deployments right.
+ */
+const basePath = process.env.BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
@@ -45,6 +52,10 @@ export const metadata: Metadata = {
   creator: site.name,
   publisher: site.name,
   alternates: { canonical: "/" },
+  icons: {
+    icon: `${basePath}/icon`,
+    apple: `${basePath}/apple-icon`,
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",

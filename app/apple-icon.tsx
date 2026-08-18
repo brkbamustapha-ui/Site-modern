@@ -3,6 +3,10 @@ import { ImageResponse } from "next/og";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
+// Rendered once at build time. Required for `output: export`, and a
+// no-op for the server build since these images never vary.
+export const dynamic = "force-static";
+
 export default function AppleIcon() {
   return new ImageResponse(
     (
