@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { ExperienceProvider } from "@/lib/motion-context";
+import { siteUrl, siteUrlObject } from "@/lib/site-url";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -16,10 +17,9 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: siteUrlObject,
   title: {
     default: "La Dolce Vita — Ristorante Italiano",
     template: "%s — La Dolce Vita",
