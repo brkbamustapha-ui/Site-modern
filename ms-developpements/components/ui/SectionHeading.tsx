@@ -1,0 +1,36 @@
+import { RevealText } from "./RevealText";
+import { ScrollReveal } from "./ScrollReveal";
+import { cn } from "@/lib/utils";
+
+export function SectionHeading({
+  kicker,
+  title,
+  align = "left",
+  className,
+}: {
+  kicker: string;
+  title: string;
+  align?: "left" | "center";
+  className?: string;
+}) {
+  return (
+    <div className={cn(align === "center" && "text-center", className)}>
+      <ScrollReveal>
+        <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.4em] text-accent-soft">
+          {align === "center" && <span className="h-px w-8 bg-accent-soft/50" />}
+          {kicker}
+          {align !== "center" && <span className="h-px w-8 bg-accent-soft/50" />}
+        </p>
+      </ScrollReveal>
+      <RevealText
+        as="h2"
+        className={cn(
+          "mt-4 font-display text-4xl font-medium leading-[1.05] text-white md:text-6xl",
+          align === "center" && "justify-center"
+        )}
+      >
+        {title}
+      </RevealText>
+    </div>
+  );
+}
